@@ -64,7 +64,7 @@
                 <td>{{ item.qty }} {{ item.unit }}</td>
                 <td>{{ "{:.2f}".format(item.rate) }}</td>
                 <td>{{ "{:.2f}".format(item.basic_amount) }}</td>
-                <td>18</td> <!-- Assuming standard 18% or calculated from item -->
+                <td>{{ "{:g}".format(item.gst_rate) }}%</td>
                 <td>{{ "{:.2f}".format(item.gst_amount / 2) }}</td>
                 <td>{{ "{:.2f}".format(item.gst_amount / 2) }}</td>
                 <td>{{ "{:.0f}".format(item.total_amount) }}</td>

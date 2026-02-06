@@ -164,6 +164,7 @@ def create_quotation():
                 qty=int(item.get('qty', 0)),
                 rate=float(item.get('rate', 0)),
                 unit=item.get('unit', 'NOS'), # Capture unit
+                gst_rate=float(item.get('gst_rate', 0)), # Capture GST Rate
                 basic_amount=float(item.get('basic', 0)),
                 gst_amount=float(item.get('gst', 0)),
                 total_amount=float(item.get('total', 0))

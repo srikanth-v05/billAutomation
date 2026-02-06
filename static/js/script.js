@@ -24,6 +24,7 @@ function setupMobileNav() {
 // Tax Logic
 let currentTaxType = 'inter'; // 'intra' (CGST+SGST) or 'inter' (IGST)
 
+
 function addItemRow() {
     const tbody = document.querySelector('#itemsTable tbody');
     const tr = document.createElement('tr');
@@ -40,7 +41,15 @@ function addItemRow() {
             </select>
         </td>
         <td><span class="row-basic">0.00</span></td>
-        <td>18%</td>
+        <td>
+             <select class="gst-rate" onchange="calcRow(this)">
+                <option value="0">0%</option>
+                <option value="5">5%</option>
+                <option value="12">12%</option>
+                <option value="18" selected>18%</option>
+                <option value="28">28%</option>
+            </select>
+        </td>
         <td><span class="row-total">0.00</span></td>
         <td><button onclick="this.closest('tr').remove(); calcTotals()" class="btn-sm btn-danger">&times;</button></td>
     `;
@@ -51,9 +60,10 @@ function calcRow(input) {
     const tr = input.closest('tr');
     const qty = parseFloat(tr.querySelector('.qty').value) || 0;
     const rate = parseFloat(tr.querySelector('.rate').value) || 0;
+    const gstRate = parseFloat(tr.querySelector('.gst-rate').value) || 0;
 
     const basic = qty * rate;
-    const gst = basic * 0.18; // Standard 18% used for calculation
+    const gst = basic * (gstRate / 100);
     const total = basic + gst;
 
     tr.querySelector('.row-basic').textContent = basic.toFixed(2);
@@ -63,6 +73,7 @@ function calcRow(input) {
     tr.dataset.basic = basic;
     tr.dataset.gst = gst;
     tr.dataset.total = total;
+    tr.dataset.gstRate = gstRate;
 
     calcTotals();
 }
@@ -88,9 +99,9 @@ function calcTotals() {
         taxDiv.style.display = 'block';
         if (currentTaxType === 'intra') {
             const halfGst = totalGst / 2;
-            taxDiv.innerHTML = `CGST (9%): ${halfGst.toFixed(2)} | SGST (9%): ${halfGst.toFixed(2)}`;
+            taxDiv.innerHTML = `CGST: ${halfGst.toFixed(2)} | SGST: ${halfGst.toFixed(2)}`;
         } else {
-            taxDiv.innerHTML = `IGST (18%): ${totalGst.toFixed(2)}`;
+            taxDiv.innerHTML = `IGST: ${totalGst.toFixed(2)}`;
         }
     }
 
@@ -199,6 +210,7 @@ async function saveQuotation() {
             unit: tr.querySelector('.unit').value,
             basic: tr.dataset.basic || 0,
             gst: tr.dataset.gst || 0,
+            gst_rate: tr.dataset.gstRate || 0,
             total: tr.dataset.total || 0
         });
     });

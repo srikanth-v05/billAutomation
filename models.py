@@ -64,6 +64,7 @@ class QuotationItem(db.Model):
     qty = db.Column(db.Integer, nullable=False)
     rate = db.Column(db.Float, nullable=False)
     unit = db.Column(db.String(10), default='NOS')
+    gst_rate = db.Column(db.Float, default=18.0)
     
     # Calculated fields storage (optional, but good for reporting)
     basic_amount = db.Column(db.Float, nullable=False)
