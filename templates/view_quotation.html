@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+
+{% block header %}View Quotation{% endblock %}
+
+{% block content %}
+<div class="actions-bar no-print">
+    <a href="{{ url_for('main.dashboard') }}" class="btn btn-secondary">&larr; Back</a>
+    <button onclick="downloadPDF()" class="btn btn-primary"><i class="fa-solid fa-file-pdf"></i> Download PDF</button>
+</div>
+
+<div class="quotation-paper" id="quotationContent">
+    <div class="q-header">
+        <h2 class="text-center title-box">QUOTATION</h2>
+        <div class="header-grid">
+            <div class="company-details">
+                <h3>{{ company.name }}</h3>
+                <p>{{ company.address_line_1 }}</p>
+                <p>{{ company.state }}</p>
+                <p><strong>GSTIN: {{ company.gstin }}</strong></p>
+                <p>Phone: {{ company.phone }}</p>
+            </div>
+            <div class="meta-details">
+                <div class="meta-row">
+                    <span>DATE:</span>
+                    <span>{{ quotation.date.strftime('%d.%m.%Y') }}</span>
+                </div>
+                {% if quotation.place_of_supply %}
+                <div class="meta-row">
+                    <span>PLACE OF SUPPLY:</span>
+                    <span>{{ quotation.place_of_supply }}</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="consumer-header">CONSUMER</div>
+        <div class="customer-details">
+            <p>{{ quotation.customer.name }}</p>
+            <p>{{ quotation.customer.address }}</p>
+            <p>{{ quotation.customer.state }}</p>
+            <p><strong>GSTIN:</strong> {{ quotation.customer.gstin }}</p>
+        </div>
+    </div>
+
+    <table class="q-table">
+        <thead>
+            <tr>
+                <th width="40">Sl.no</th>
+                <th>Description</th>
+                <th width="50">Qty</th>
+                <th width="50">Rate</th>
+                <th width="80">BASIC</th>
+                <th width="50">GST %</th>
+                <th width="70">CGST</th>
+                <th width="70">SGST</th>
+                <th width="80">Amount</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in quotation.items %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td class="text-left">{{ item.description }}</td>
+                <td>{{ item.qty }} {{ item.unit }}</td>
+                <td>{{ "{:.2f}".format(item.rate) }}</td>
+                <td>{{ "{:.2f}".format(item.basic_amount) }}</td>
+                <td>18</td> <!-- Assuming standard 18% or calculated from item -->
+                <td>{{ "{:.2f}".format(item.gst_amount / 2) }}</td>
+                <td>{{ "{:.2f}".format(item.gst_amount / 2) }}</td>
+                <td>{{ "{:.0f}".format(item.total_amount) }}</td>
+            </tr>
+            {% endfor %}
+
+        </tbody>
+        <tfoot>
+            <tr>
+                <td colspan="5" class="text-left">Total Rupees. (in words) <br>
+                    <span id="amountInWords">Rupees {{ amount_in_words }}</span>
+                </td>
+                <td colspan="2">BASIC<br>ADD CGST<br>ADD SGST<br><strong>TOTAL</strong></td>
+                <td colspan="2" class="text-right">
+                    {{ "{:.2f}".format(quotation.total_basic) }}<br>
+                    {{ "{:.2f}".format(quotation.total_gst / 2) }}<br>
+                    {{ "{:.2f}".format(quotation.total_gst / 2) }}<br>
+                    <strong>{{ "{:.0f}".format(quotation.grand_total) }}</strong>
+                </td>
+            </tr>
+        </tfoot>
+    </table>
+</div>
+
+<script>
+    function downloadPDF() {
+        const element = document.getElementById('quotationContent');
+        const opt = {
+            margin: 0.2, // inches
+            filename: 'Quotation_{{ quotation.quotation_number }}.pdf',
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2 },
+            jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+        };
+        html2pdf().set(opt).from(element).save();
+    }
+
+    // Simple Number to Words placeholder logic (client side just for display if needed dynamic)
+    // Ideally this comes from backend passed into template
+</script>
+{% endblock %}

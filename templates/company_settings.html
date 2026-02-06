@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block header %}Company Settings{% endblock %}
+
+{% block content %}
+<div class="card settings-card">
+    <form method="POST" class="styled-form">
+        <div class="form-group">
+            <label>Company Name</label>
+            <input type="text" name="name" value="{{ company.name }}" required>
+        </div>
+
+        <div class="form-group">
+            <label>Address Line 1</label>
+            <input type="text" name="address_line_1" value="{{ company.address_line_1 }}" required>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label>State</label>
+                <input type="text" name="state" value="{{ company.state }}" required>
+            </div>
+            <div class="form-group">
+                <label>GSTIN</label>
+                <input type="text" name="gstin" value="{{ company.gstin }}" required>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Phone</label>
+            <input type="text" name="phone" value="{{ company.phone }}">
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Save Details</button>
+        </div>
+    </form>
+</div>
+{% endblock %}
