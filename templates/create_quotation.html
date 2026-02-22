@@ -5,12 +5,12 @@
 {% block content %}
 <div class="create-quotation-container">
     <div class="card">
-        <h3>Customer Details</h3>
+        <h3><i class="fa-solid fa-user" style="color: var(--primary-color);"></i> Customer Details</h3>
         <div class="form-row">
             <div class="form-group">
-                <label>Customer Name</label>
-                <div class="search-container" style="position:relative;">
-                    <input type="text" id="custName" placeholder="Search or Enter name" autocomplete="off"
+                <label for="custName">Customer Name</label>
+                <div class="search-container">
+                    <input type="text" id="custName" placeholder="Search or enter name" autocomplete="off"
                         onkeyup="searchCustomer(this.value)" value="{{ extracted.customer.name if extracted else '' }}">
                     <input type="hidden" id="custId">
                     <div id="custSearchResults" class="dropdown-menu"
@@ -18,34 +18,41 @@
                 </div>
             </div>
             <div class="form-group">
-                <label>Date</label>
+                <label for="qDate">Date</label>
                 <input type="date" id="qDate" value="{{ extracted.date if extracted else now }}">
             </div>
         </div>
         <div class="form-group">
-            <label>Address</label>
-            <input type="text" id="custAddr" placeholder="Enter address" value="{{ extracted.customer.address if extracted else '' }}">
+            <label for="custAddr">Address</label>
+            <input type="text" id="custAddr" placeholder="Enter address"
+                value="{{ extracted.customer.address if extracted else '' }}">
         </div>
         <div class="form-row">
             <div class="form-group">
-                <label>GSTIN</label>
-                <input type="text" id="custGst" placeholder="33ABCDE..." value="{{ extracted.customer.gstin if extracted else '' }}">
+                <label for="custGst">GSTIN</label>
+                <input type="text" id="custGst" placeholder="e.g. 33ABCDE1234F1Z5"
+                    value="{{ extracted.customer.gstin if extracted else '' }}">
             </div>
             <div class="form-group">
-                <label>State</label>
-                <input type="text" id="custState" placeholder="Puducherry" value="{{ extracted.customer.state if extracted else '' }}">
+                <label for="custState">State</label>
+                <input type="text" id="custState" placeholder="e.g. Puducherry"
+                    value="{{ extracted.customer.state if extracted else '' }}">
             </div>
         </div>
         <div class="form-group">
-            <label>Place of Supply</label>
-            <input type="text" id="placeOfSupply" placeholder="Enter place of supply (e.g., Puducherry)" value="{{ extracted.place_of_supply if extracted else '' }}">
+            <label for="placeOfSupply">Place of Supply</label>
+            <input type="text" id="placeOfSupply" placeholder="Enter place of supply (e.g., Puducherry)"
+                value="{{ extracted.place_of_supply if extracted else '' }}">
         </div>
     </div>
 
     <div class="card mt-4">
         <div class="items-header">
-            <h3>Items</h3>
-            <button type="button" class="btn btn-secondary" onclick="addItemRow()">+ Add Item</button>
+            <h3 style="margin-bottom: 0;"><i class="fa-solid fa-list" style="color: var(--primary-color);"></i> Items
+            </h3>
+            <button type="button" class="btn btn-secondary" onclick="addItemRow()">
+                <i class="fa-solid fa-plus"></i> Add Item
+            </button>
         </div>
 
         <div class="table-responsive">
@@ -53,17 +60,17 @@
                 <thead>
                     <tr>
                         <th>Description</th>
-                        <th width="80">Qty</th>
-                        <th width="100">Rate</th>
-                        <th width="80">Unit</th>
-                        <th width="100">Basic</th>
-                        <th width="100">GST %</th>
-                        <th width="100">Total</th>
-                        <th width="50"></th>
+                        <th width="70">Qty</th>
+                        <th width="90">Rate</th>
+                        <th width="75">Unit</th>
+                        <th width="90">Basic</th>
+                        <th width="90">GST %</th>
+                        <th width="90">Total</th>
+                        <th width="46"></th>
                     </tr>
                 </thead>
                 <tbody>
-                    <!-- Rows will be added here via JS -->
+                    <!-- Rows added via JS -->
                 </tbody>
             </table>
         </div>
@@ -72,29 +79,31 @@
     <div class="card mt-4 summary-card">
         <div class="summary-row">
             <span>Total Basic:</span>
-            <span id="displayBasic">0.00</span>
+            <span id="displayBasic">₹0.00</span>
         </div>
         <div class="summary-row">
             <span>Total GST:</span>
-            <span id="displayGst">0.00</span>
+            <span id="displayGst">₹0.00</span>
         </div>
-        <div class="summary-row tax-details" style="font-size: 0.9em; color: #666; display:none;" id="taxBreakdown">
+        <div class="summary-row tax-details" style="display:none;" id="taxBreakdown">
             <!-- Populated by JS -->
         </div>
-    </div>
-    <div class="summary-row grand-total">
-        <span>Grand Total:</span>
-        <span id="displayGrand">0.00</span>
+        <div class="summary-row grand-total" style="border-top: 1px solid rgba(255,255,255,0.3); margin-top: 4px;">
+            <span>Grand Total:</span>
+            <span id="displayGrand">₹0.00</span>
+        </div>
     </div>
 
     <div class="form-actions mt-4">
-        <button type="button" class="btn btn-primary btn-lg" onclick="saveQuotation()">Generate Quotation</button>
+        <a href="{{ url_for('main.dashboard') }}" class="btn btn-secondary">Cancel</a>
+        <button type="button" class="btn btn-primary btn-lg" onclick="saveQuotation()">
+            <i class="fa-solid fa-check-circle"></i> Generate Quotation
+        </button>
     </div>
-</div>
 </div>
 
 <script>
-var extracted = {{ extracted | tojson if extracted else 'null' }};
+    var extracted = {{ extracted | tojson if extracted else 'null' }};
 </script>
 
 {% endblock %}

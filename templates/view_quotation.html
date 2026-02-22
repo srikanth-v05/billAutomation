@@ -4,8 +4,12 @@
 
 {% block content %}
 <div class="actions-bar no-print">
-    <a href="{{ url_for('main.dashboard') }}" class="btn btn-secondary">&larr; Back</a>
-    <button onclick="downloadPDF()" class="btn btn-primary"><i class="fa-solid fa-file-pdf"></i> Download PDF</button>
+    <a href="{{ url_for('main.dashboard') }}" class="btn btn-secondary">
+        <i class="fa-solid fa-arrow-left"></i> Back
+    </a>
+    <button onclick="downloadPDF()" class="btn btn-primary">
+        <i class="fa-solid fa-file-pdf"></i> Download PDF
+    </button>
 </div>
 
 <div class="quotation-paper" id="quotationContent">
@@ -45,15 +49,15 @@
     <table class="q-table">
         <thead>
             <tr>
-                <th width="40">Sl.no</th>
+                <th width="35">Sl.no</th>
                 <th>Description</th>
                 <th width="50">Qty</th>
-                <th width="50">Rate</th>
-                <th width="80">BASIC</th>
-                <th width="50">GST %</th>
-                <th width="70">CGST</th>
-                <th width="70">SGST</th>
-                <th width="80">Amount</th>
+                <th width="55">Rate</th>
+                <th width="70">BASIC</th>
+                <th width="45">GST %</th>
+                <th width="65">CGST</th>
+                <th width="65">SGST</th>
+                <th width="75">Amount</th>
             </tr>
         </thead>
         <tbody>
@@ -70,15 +74,17 @@
                 <td>{{ "{:.0f}".format(item.total_amount) }}</td>
             </tr>
             {% endfor %}
-
         </tbody>
         <tfoot>
             <tr>
-                <td colspan="5" class="text-left">Total Rupees. (in words) <br>
+                <td colspan="5" class="text-left" style="vertical-align: top;">
+                    Total Rupees. (in words) <br>
                     <span id="amountInWords">Rupees {{ amount_in_words }}</span>
                 </td>
-                <td colspan="2">BASIC<br>ADD CGST<br>ADD SGST<br><strong>TOTAL</strong></td>
-                <td colspan="2" class="text-right">
+                <td colspan="2" style="text-align: right; line-height: 1.8;">
+                    BASIC<br>ADD CGST<br>ADD SGST<br><strong>TOTAL</strong>
+                </td>
+                <td colspan="2" class="text-right" style="line-height: 1.8;">
                     {{ "{:.2f}".format(quotation.total_basic) }}<br>
                     {{ "{:.2f}".format(quotation.total_gst / 2) }}<br>
                     {{ "{:.2f}".format(quotation.total_gst / 2) }}<br>
@@ -92,17 +98,34 @@
 <script>
     function downloadPDF() {
         const element = document.getElementById('quotationContent');
+        if (!element) {
+            alert('Error: Quotation content not found.');
+            return;
+        }
+
         const opt = {
-            margin: 0.2, // inches
+            margin: 0.2,
             filename: 'Quotation_{{ quotation.quotation_number }}.pdf',
             image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2 },
+            html2canvas: { scale: 2, useCORS: true },
             jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
         };
-        html2pdf().set(opt).from(element).save();
-    }
 
-    // Simple Number to Words placeholder logic (client side just for display if needed dynamic)
-    // Ideally this comes from backend passed into template
+        // Show loading state
+        const btn = event.target.closest('.btn');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Generating...';
+        btn.disabled = true;
+
+        html2pdf().set(opt).from(element).save().then(function () {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        }).catch(function (err) {
+            console.error('PDF generation error:', err);
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+            alert('Error generating PDF. Please try again.');
+        });
+    }
 </script>
 {% endblock %}

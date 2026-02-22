@@ -4,36 +4,40 @@
 
 {% block content %}
 <div class="card">
-    <h3>Add New Customer</h3>
+    <h3><i class="fa-solid fa-user-plus" style="color: var(--primary-color);"></i> Add New Customer</h3>
     <form method="POST" action="{{ url_for('main.customers') }}">
         <div class="form-row">
             <div class="form-group">
-                <label>Name</label>
-                <input type="text" name="name" required placeholder="Customer Name">
+                <label for="customerName">Name</label>
+                <input type="text" name="name" id="customerName" required placeholder="Customer Name">
             </div>
             <div class="form-group">
-                <label>GSTIN</label>
-                <input type="text" name="gstin" placeholder="GST Number">
+                <label for="customerGstin">GSTIN</label>
+                <input type="text" name="gstin" id="customerGstin" placeholder="GST Number">
             </div>
         </div>
         <div class="form-row">
             <div class="form-group">
-                <label>Address</label>
-                <input type="text" name="address" placeholder="Address">
+                <label for="customerAddress">Address</label>
+                <input type="text" name="address" id="customerAddress" placeholder="Address">
             </div>
             <div class="form-group">
-                <label>State</label>
-                <input type="text" name="state" placeholder="State">
+                <label for="customerState">State</label>
+                <input type="text" name="state" id="customerState" placeholder="State">
             </div>
         </div>
-        <button type="submit" class="btn btn-primary mt-2">Add Customer</button>
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">
+                <i class="fa-solid fa-plus"></i> Add Customer
+            </button>
+        </div>
     </form>
 </div>
 
 <div class="card mt-4">
-    <h3>Existing Customers</h3>
-    <div class="table-responsive">
-        <table class="items-table">
+    <h3><i class="fa-solid fa-users" style="color: var(--primary-color);"></i> Existing Customers</h3>
+    <div class="table-container">
+        <table>
             <thead>
                 <tr>
                     <th>Name</th>
@@ -46,58 +50,61 @@
             <tbody>
                 {% for customer in customers %}
                 <tr>
-                    <td>{{ customer.name }}</td>
-                    <td>{{ customer.gstin }}</td>
-                    <td>{{ customer.address }}</td>
-                    <td>{{ customer.state }}</td>
+                    <td style="font-weight: 500;">{{ customer.name }}</td>
+                    <td>{{ customer.gstin or '—' }}</td>
+                    <td>{{ customer.address or '—' }}</td>
+                    <td>{{ customer.state or '—' }}</td>
                     <td>
-                        <div class="actions">
+                        <div class="action-group">
                             <button onclick='openEditModal({{ customer.to_dict() | tojson }}, {{ customer.id }})'
-                                class="btn-sm btn-secondary">Edit</button>
+                                class="btn btn-sm btn-secondary">Edit</button>
                             <form action="{{ url_for('main.delete_customer', id=customer.id) }}" method="POST"
                                 style="display:inline;"
                                 onsubmit="return confirm('Are you sure you want to delete this customer?');">
-                                <button type="submit" class="btn-sm btn-danger">Delete</button>
+                                <button type="submit" class="btn btn-sm btn-danger">Delete</button>
                             </form>
                         </div>
                     </td>
                 </tr>
                 {% else %}
                 <tr>
-                    <td colspan="5" style="text-align:center;">No customers found.</td>
+                    <td colspan="5" class="text-center"
+                        style="padding: 40px 20px; color: var(--secondary-color); font-size: 0.9rem;">
+                        <i class="fa-solid fa-users"
+                            style="font-size: 2rem; display: block; margin-bottom: 10px; opacity: 0.4;"></i>
+                        No customers found. Add your first one above!
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
 </div>
-</div>
 
 <!-- Edit Customer Modal -->
-<div id="editCustomerModal" class="modal"
-    style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1001; align-items:center; justify-content:center;">
-    <div class="modal-content card" style="width:90%; max-width:500px; position:relative;">
+<div id="editCustomerModal" class="modal" style="display:none;">
+    <div class="modal-content card">
         <h3 style="margin-top:0;">Edit Customer</h3>
-        <span onclick="closeEditModal()"
-            style="position:absolute; top:15px; right:20px; cursor:pointer; font-size:1.5rem;">&times;</span>
+        <button class="modal-close" onclick="closeEditModal()" aria-label="Close modal">&times;</button>
         <form id="editCustomerForm" method="POST">
             <div class="form-group">
-                <label>Name</label>
+                <label for="editName">Name</label>
                 <input type="text" id="editName" name="name" required>
             </div>
             <div class="form-group">
-                <label>GSTIN</label>
+                <label for="editGstin">GSTIN</label>
                 <input type="text" id="editGstin" name="gstin">
             </div>
             <div class="form-group">
-                <label>Address</label>
+                <label for="editAddress">Address</label>
                 <input type="text" id="editAddress" name="address">
             </div>
             <div class="form-group">
-                <label>State</label>
+                <label for="editState">State</label>
                 <input type="text" id="editState" name="state">
             </div>
-            <div class="form-actions" style="margin-top:20px;">
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeEditModal()">Cancel</button>
                 <button type="submit" class="btn btn-primary">Save Changes</button>
             </div>
         </form>
@@ -107,25 +114,40 @@
 <script>
     function openEditModal(customer, id) {
         const modal = document.getElementById('editCustomerModal');
+        if (!modal) return;
         modal.style.display = 'flex';
         document.getElementById('editCustomerForm').action = `/customers/edit/${id}`;
 
-        document.getElementById('editName').value = customer.name;
+        document.getElementById('editName').value = customer.name || '';
         document.getElementById('editGstin').value = customer.gstin || '';
         document.getElementById('editAddress').value = customer.address || '';
         document.getElementById('editState').value = customer.state || '';
+
+        // Prevent body scroll when modal is open
+        document.body.style.overflow = 'hidden';
     }
 
     function closeEditModal() {
-        document.getElementById('editCustomerModal').style.display = 'none';
-    }
-
-    // Close if clicked outside
-    window.onclick = function (event) {
         const modal = document.getElementById('editCustomerModal');
-        if (event.target == modal) {
+        if (modal) {
             modal.style.display = 'none';
+            document.body.style.overflow = '';
         }
     }
+
+    // Close if clicked outside modal content
+    window.addEventListener('click', function (event) {
+        const modal = document.getElementById('editCustomerModal');
+        if (event.target === modal) {
+            closeEditModal();
+        }
+    });
+
+    // Close on Escape key
+    window.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape') {
+            closeEditModal();
+        }
+    });
 </script>
 {% endblock %}

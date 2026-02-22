@@ -1,4 +1,4 @@
-// Mobile Navigation
+// ─── Mobile Navigation ───
 function toggleSidebar() {
     const sidebar = document.getElementById('sidebar');
     const overlay = document.querySelector('.sidebar-overlay');
@@ -6,6 +6,13 @@ function toggleSidebar() {
     if (sidebar && overlay) {
         sidebar.classList.toggle('active');
         overlay.classList.toggle('active');
+
+        // Prevent body scroll when sidebar is open
+        if (sidebar.classList.contains('active')) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = '';
+        }
     }
 }
 
@@ -21,23 +28,37 @@ function setupMobileNav() {
     });
 }
 
-// Tax Logic
-let currentTaxType = 'inter'; // 'intra' (CGST+SGST) or 'inter' (IGST)
+// Handle window resize – close sidebar if resizing to desktop
+window.addEventListener('resize', function () {
+    if (window.innerWidth > 768) {
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.querySelector('.sidebar-overlay');
+        if (sidebar) sidebar.classList.remove('active');
+        if (overlay) overlay.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+});
 
+// ─── Tax Logic ───
+let currentTaxType = 'inter'; // 'intra' (CGST+SGST) or 'inter' (IGST)
 
 function addItemRow() {
     const tbody = document.querySelector('#itemsTable tbody');
+    if (!tbody) return;
+
     const tr = document.createElement('tr');
     tr.innerHTML = `
         <td><input type="text" class="desc" placeholder="Item Name"></td>
-        <td><input type="number" class="qty" value="1" oninput="calcRow(this)"></td>
-        <td><input type="number" class="rate" value="0" oninput="calcRow(this)"></td>
+        <td><input type="number" class="qty" value="1" min="0" step="1" oninput="calcRow(this)"></td>
+        <td><input type="number" class="rate" value="0" min="0" step="0.01" oninput="calcRow(this)"></td>
         <td>
             <select class="unit">
                 <option value="NOS">NOS</option>
                 <option value="KGS">KGS</option>
                 <option value="LTS">LTS</option>
                 <option value="PKTS">PKTS</option>
+                <option value="MTR">MTR</option>
+                <option value="SET">SET</option>
             </select>
         </td>
         <td><span class="row-basic">0.00</span></td>
@@ -51,18 +72,32 @@ function addItemRow() {
             </select>
         </td>
         <td><span class="row-total">0.00</span></td>
-        <td><button onclick="this.closest('tr').remove(); calcTotals()" class="btn-sm btn-danger">&times;</button></td>
+        <td><button onclick="removeItemRow(this)" class="btn btn-sm btn-danger" title="Remove item">&times;</button></td>
     `;
     tbody.appendChild(tr);
 }
 
+function removeItemRow(btn) {
+    const tr = btn.closest('tr');
+    if (tr) {
+        tr.remove();
+        calcTotals();
+    }
+}
+
 function calcRow(input) {
     const tr = input.closest('tr');
+    if (!tr) return;
+
     const qty = parseFloat(tr.querySelector('.qty').value) || 0;
     const rate = parseFloat(tr.querySelector('.rate').value) || 0;
     const gstRate = parseFloat(tr.querySelector('.gst-rate').value) || 0;
 
-    const basic = qty * rate;
+    // Prevent negative values
+    const safeQty = Math.max(0, qty);
+    const safeRate = Math.max(0, rate);
+
+    const basic = safeQty * safeRate;
     const gst = basic * (gstRate / 100);
     const total = basic + gst;
 
@@ -89,9 +124,13 @@ function calcTotals() {
 
     const grandTotal = totalBasic + totalGst;
 
-    document.getElementById('displayBasic').textContent = totalBasic.toFixed(2);
-    document.getElementById('displayGst').textContent = totalGst.toFixed(2);
-    document.getElementById('displayGrand').textContent = grandTotal.toFixed(2);
+    const displayBasic = document.getElementById('displayBasic');
+    const displayGst = document.getElementById('displayGst');
+    const displayGrand = document.getElementById('displayGrand');
+
+    if (displayBasic) displayBasic.textContent = '₹' + totalBasic.toFixed(2);
+    if (displayGst) displayGst.textContent = '₹' + totalGst.toFixed(2);
+    if (displayGrand) displayGrand.textContent = '₹' + grandTotal.toFixed(2);
 
     // Update Tax Breakdown Display
     const taxDiv = document.getElementById('taxBreakdown');
@@ -99,9 +138,9 @@ function calcTotals() {
         taxDiv.style.display = 'block';
         if (currentTaxType === 'intra') {
             const halfGst = totalGst / 2;
-            taxDiv.innerHTML = `CGST: ${halfGst.toFixed(2)} | SGST: ${halfGst.toFixed(2)}`;
+            taxDiv.innerHTML = `CGST: ₹${halfGst.toFixed(2)} | SGST: ₹${halfGst.toFixed(2)}`;
         } else {
-            taxDiv.innerHTML = `IGST: ${totalGst.toFixed(2)}`;
+            taxDiv.innerHTML = `IGST: ₹${totalGst.toFixed(2)}`;
         }
     }
 
@@ -115,9 +154,12 @@ function calcTotals() {
     };
 }
 
-// Check Tax Type based on GSTIN
+// ─── Check Tax Type based on GSTIN ───
 function updateTaxType() {
-    const gstin = document.getElementById('custGst').value || '';
+    const gstInput = document.getElementById('custGst');
+    if (!gstInput) return;
+
+    const gstin = gstInput.value.trim();
     if (gstin.startsWith('34')) {
         currentTaxType = 'intra';
     } else {
@@ -127,15 +169,20 @@ function updateTaxType() {
 }
 
 // Auto-trigger tax check on manual entry
-if (document.getElementById('custGst')) {
-    document.getElementById('custGst').addEventListener('input', updateTaxType);
-}
+(function () {
+    const gstInput = document.getElementById('custGst');
+    if (gstInput) {
+        gstInput.addEventListener('input', updateTaxType);
+    }
+})();
 
-
-// Customer Search Logic
+// ─── Customer Search Logic ───
 let searchTimeout = null;
+
 async function searchCustomer(query) {
     const resultsDiv = document.getElementById('custSearchResults');
+    if (!resultsDiv) return;
+
     if (!query || query.length < 2) {
         resultsDiv.style.display = 'none';
         return;
@@ -145,6 +192,11 @@ async function searchCustomer(query) {
     searchTimeout = setTimeout(async () => {
         try {
             const res = await fetch(`/api/customers?q=${encodeURIComponent(query)}`);
+            if (!res.ok) {
+                console.error('Customer search failed:', res.status);
+                return;
+            }
+
             const customers = await res.json();
 
             resultsDiv.innerHTML = '';
@@ -152,7 +204,7 @@ async function searchCustomer(query) {
                 customers.forEach(c => {
                     const div = document.createElement('div');
                     div.className = 'dropdown-item';
-                    div.textContent = c.name;
+                    div.textContent = c.name; // Safe: textContent prevents XSS
                     div.onclick = () => selectCustomer(c);
                     resultsDiv.appendChild(div);
                 });
@@ -161,19 +213,27 @@ async function searchCustomer(query) {
                 resultsDiv.style.display = 'none';
             }
         } catch (e) {
-            console.error(e);
+            console.error('Customer search error:', e);
         }
     }, 300);
 }
 
 function selectCustomer(c) {
-    document.getElementById('custName').value = c.name;
-    document.getElementById('custId').value = c.id;
-    document.getElementById('custAddr').value = c.address || '';
-    document.getElementById('custGst').value = c.gstin || '';
-    document.getElementById('custState').value = c.state || '';
+    const fields = {
+        'custName': c.name,
+        'custId': c.id,
+        'custAddr': c.address,
+        'custGst': c.gstin,
+        'custState': c.state,
+    };
 
-    document.getElementById('custSearchResults').style.display = 'none';
+    for (const [id, value] of Object.entries(fields)) {
+        const el = document.getElementById(id);
+        if (el) el.value = value || '';
+    }
+
+    const resultsDiv = document.getElementById('custSearchResults');
+    if (resultsDiv) resultsDiv.style.display = 'none';
 
     updateTaxType();
 }
@@ -186,28 +246,70 @@ document.addEventListener('click', (e) => {
     }
 });
 
-
+// ─── Save Quotation ───
 async function saveQuotation() {
     // Validation
-    const custName = document.getElementById('custName').value.trim();
-    const custGst = document.getElementById('custGst').value.trim();
-    const custAddr = document.getElementById('custAddr').value.trim();
-    const custState = document.getElementById('custState').value.trim();
+    const custName = (document.getElementById('custName')?.value || '').trim();
+    const custGst = (document.getElementById('custGst')?.value || '').trim();
+    const custAddr = (document.getElementById('custAddr')?.value || '').trim();
+    const custState = (document.getElementById('custState')?.value || '').trim();
+    const qDate = (document.getElementById('qDate')?.value || '').trim();
 
-    if (!custName || !custGst || !custAddr || !custState) {
-        alert("Please fill in all Customer Details (Name, GSTIN, Address, State).");
+    if (!custName) {
+        alert('Please enter the Customer Name.');
+        document.getElementById('custName')?.focus();
+        return;
+    }
+    if (!custGst) {
+        alert('Please enter the Customer GSTIN.');
+        document.getElementById('custGst')?.focus();
+        return;
+    }
+    if (!custAddr) {
+        alert('Please enter the Customer Address.');
+        document.getElementById('custAddr')?.focus();
+        return;
+    }
+    if (!custState) {
+        alert('Please enter the Customer State.');
+        document.getElementById('custState')?.focus();
+        return;
+    }
+    if (!qDate) {
+        alert('Please select a date.');
+        document.getElementById('qDate')?.focus();
+        return;
+    }
+
+    // Validate items
+    const itemRows = document.querySelectorAll('#itemsTable tbody tr');
+    if (itemRows.length === 0) {
+        alert('Please add at least one item.');
         return;
     }
 
     const totals = calcTotals();
 
     const items = [];
-    document.querySelectorAll('#itemsTable tbody tr').forEach(tr => {
+    let hasInvalidItem = false;
+
+    itemRows.forEach((tr, index) => {
+        const desc = (tr.querySelector('.desc')?.value || '').trim();
+        const qty = tr.querySelector('.qty')?.value || 0;
+        const rate = tr.querySelector('.rate')?.value || 0;
+
+        if (!desc) {
+            hasInvalidItem = true;
+            alert(`Please enter a description for item ${index + 1}.`);
+            tr.querySelector('.desc')?.focus();
+            return;
+        }
+
         items.push({
-            description: tr.querySelector('.desc').value,
-            qty: tr.querySelector('.qty').value,
-            rate: tr.querySelector('.rate').value,
-            unit: tr.querySelector('.unit').value,
+            description: desc,
+            qty: qty,
+            rate: rate,
+            unit: tr.querySelector('.unit')?.value || 'NOS',
             basic: tr.dataset.basic || 0,
             gst: tr.dataset.gst || 0,
             gst_rate: tr.dataset.gstRate || 0,
@@ -215,19 +317,30 @@ async function saveQuotation() {
         });
     });
 
+    if (hasInvalidItem) return;
+
     const data = {
-        date: document.getElementById('qDate').value,
-        place_of_supply: document.getElementById('placeOfSupply').value,
+        date: qDate,
+        place_of_supply: (document.getElementById('placeOfSupply')?.value || '').trim(),
         customer: {
-            id: document.getElementById('custId').value,
-            name: document.getElementById('custName').value,
-            address: document.getElementById('custAddr').value,
-            gstin: document.getElementById('custGst').value,
-            state: document.getElementById('custState').value,
+            id: document.getElementById('custId')?.value || '',
+            name: custName,
+            address: custAddr,
+            gstin: custGst,
+            state: custState,
         },
         items: items,
         totals: totals
     };
+
+    // Disable button to prevent double-submit
+    const saveBtn = document.querySelector('.form-actions .btn-primary');
+    let originalBtnText = '';
+    if (saveBtn) {
+        originalBtnText = saveBtn.innerHTML;
+        saveBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving...';
+        saveBtn.disabled = true;
+    }
 
     try {
         const response = await fetch('/quotation/new', {
@@ -240,67 +353,117 @@ async function saveQuotation() {
         if (result.success) {
             window.location.href = result.redirect_url;
         } else {
-            alert('Error saving quotation');
+            alert('Error saving quotation: ' + (result.error || 'Unknown error'));
+            if (saveBtn) {
+                saveBtn.innerHTML = originalBtnText;
+                saveBtn.disabled = false;
+            }
         }
     } catch (e) {
-        console.error(e);
-        alert('Failed to save');
+        console.error('Save error:', e);
+        alert('Failed to save quotation. Please check your connection and try again.');
+        if (saveBtn) {
+            saveBtn.innerHTML = originalBtnText;
+            saveBtn.disabled = false;
+        }
     }
 }
 
-// Initialize
-document.addEventListener('DOMContentLoaded', () => {
-    // Setup mobile navigation
-    setupMobileNav();
-
-    // Initialize quotation form if present
-    if (document.getElementById('qDate')) {
-        if (!extracted || !extracted.date) {
-            document.getElementById('qDate').valueAsDate = new Date();
-        }
-    }
-
-    // Add initial item row if on quotation page
-    if (document.getElementById('itemsTable')) {
-        if (extracted && extracted.items && extracted.items.length > 0) {
-            // Clear initial row
-            document.querySelector('#itemsTable tbody').innerHTML = '';
-            extracted.items.forEach(item => addExtractedItemRow(item));
-        } else {
-            addItemRow();
-        }
-    }
-});
-
+// ─── Add Extracted Item Row (from AI extraction) ───
 function addExtractedItemRow(item) {
     const tbody = document.querySelector('#itemsTable tbody');
+    if (!tbody || !item) return;
+
     const tr = document.createElement('tr');
+
+    // Safely escape values for attributes
+    const desc = (item.description || '').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+    const qty = parseInt(item.qty) || 1;
+    const rate = parseFloat(item.rate) || 0;
+    const unit = (item.unit || 'NOS').replace(/"/g, '&quot;');
+    const gstRate = parseFloat(item.gst_rate) || 18;
+
+    const unitOptions = ['NOS', 'KGS', 'LTS', 'PKTS', 'MTR', 'SET'];
+    const gstOptions = [0, 5, 12, 18, 28];
+
     tr.innerHTML = `
-        <td><input type="text" class="desc" placeholder="Item Name" value="${item.description || ''}"></td>
-        <td><input type="number" class="qty" value="${item.qty || 1}" oninput="calcRow(this)"></td>
-        <td><input type="number" class="rate" value="${item.rate || 0}" oninput="calcRow(this)"></td>
+        <td><input type="text" class="desc" placeholder="Item Name" value="${desc}"></td>
+        <td><input type="number" class="qty" value="${qty}" min="0" step="1" oninput="calcRow(this)"></td>
+        <td><input type="number" class="rate" value="${rate}" min="0" step="0.01" oninput="calcRow(this)"></td>
         <td>
             <select class="unit">
-                <option value="NOS" ${item.unit === 'NOS' ? 'selected' : ''}>NOS</option>
-                <option value="KGS" ${item.unit === 'KGS' ? 'selected' : ''}>KGS</option>
-                <option value="LTS" ${item.unit === 'LTS' ? 'selected' : ''}>LTS</option>
-                <option value="PKTS" ${item.unit === 'PKTS' ? 'selected' : ''}>PKTS</option>
+                ${unitOptions.map(u => `<option value="${u}" ${u === unit ? 'selected' : ''}>${u}</option>`).join('')}
             </select>
         </td>
         <td><span class="row-basic">0.00</span></td>
         <td>
              <select class="gst-rate" onchange="calcRow(this)">
-                <option value="0" ${item.gst_rate == 0 ? 'selected' : ''}>0%</option>
-                <option value="5" ${item.gst_rate == 5 ? 'selected' : ''}>5%</option>
-                <option value="12" ${item.gst_rate == 12 ? 'selected' : ''}>12%</option>
-                <option value="18" ${item.gst_rate == 18 ? 'selected' : ''}>18%</option>
-                <option value="28" ${item.gst_rate == 28 ? 'selected' : ''}>28%</option>
+                ${gstOptions.map(g => `<option value="${g}" ${g === gstRate ? 'selected' : ''}>${g}%</option>`).join('')}
             </select>
         </td>
         <td><span class="row-total">0.00</span></td>
-        <td><button onclick="this.closest('tr').remove(); calcTotals()" class="btn-sm btn-danger">&times;</button></td>
+        <td><button onclick="removeItemRow(this)" class="btn btn-sm btn-danger" title="Remove item">&times;</button></td>
     `;
     tbody.appendChild(tr);
     // Trigger calc
     calcRow(tr.querySelector('.qty'));
 }
+
+// ─── Active Nav Highlight ───
+function highlightActiveNav() {
+    const currentPath = window.location.pathname;
+    const navItems = document.querySelectorAll('.nav-item');
+
+    navItems.forEach(item => {
+        const href = item.getAttribute('href');
+        if (href && currentPath === href) {
+            item.classList.add('active');
+        } else if (href === '/' && currentPath === '/') {
+            item.classList.add('active');
+        }
+    });
+}
+
+// ─── Initialize ───
+document.addEventListener('DOMContentLoaded', () => {
+    // Setup mobile navigation
+    setupMobileNav();
+
+    // Highlight active nav item
+    highlightActiveNav();
+
+    // Initialize quotation form if present
+    const dateInput = document.getElementById('qDate');
+    if (dateInput) {
+        // `extracted` is only defined on the create_quotation page
+        const hasExtracted = typeof extracted !== 'undefined' && extracted !== null;
+        if (!hasExtracted || !extracted.date) {
+            dateInput.valueAsDate = new Date();
+        }
+    }
+
+    // Add initial item row if on quotation page
+    const itemsTable = document.getElementById('itemsTable');
+    if (itemsTable) {
+        const hasExtracted = typeof extracted !== 'undefined' && extracted !== null;
+        if (hasExtracted && extracted.items && extracted.items.length > 0) {
+            // Clear initial rows
+            const tbody = itemsTable.querySelector('tbody');
+            if (tbody) tbody.innerHTML = '';
+            extracted.items.forEach(item => addExtractedItemRow(item));
+        } else {
+            addItemRow();
+        }
+    }
+
+    // Auto-dismiss flash messages after 5 seconds
+    const flashMessages = document.querySelectorAll('.flash-msg');
+    flashMessages.forEach(msg => {
+        setTimeout(() => {
+            msg.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+            msg.style.opacity = '0';
+            msg.style.transform = 'translateY(-8px)';
+            setTimeout(() => msg.remove(), 500);
+        }, 5000);
+    });
+});

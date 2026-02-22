@@ -4,5 +4,4 @@ pymysql
 certifi
 python-dotenv
 google-generativeai
-PyPDF2
-Pillow
+werkzeug

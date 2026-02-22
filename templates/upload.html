@@ -1,22 +1,73 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Upload Document</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-</head>
-<body>
-    <div class="container">
-        <h1>Upload Invoice or Bill</h1>
-        <form method="POST" enctype="multipart/form-data">
-            <div class="form-group">
-                <label for="file">Select PDF or Image file:</label>
-                <input type="file" name="file" id="file" accept=".pdf,.png,.jpg,.jpeg" required>
-            </div>
-            <button type="submit">Upload and Extract</button>
-        </form>
-        <a href="{{ url_for('main.dashboard') }}">Back to Dashboard</a>
-    </div>
-</body>
-</html>
+{% extends 'base.html' %}
+
+{% block header %}Upload Document{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 640px;">
+    <h3><i class="fa-solid fa-cloud-arrow-up" style="color: var(--primary-color);"></i> Upload Invoice or Bill</h3>
+    <p style="color: var(--secondary-color); margin-bottom: 20px; font-size: 0.9rem;">
+        Upload a PDF or image file and we'll extract the details automatically using AI.
+    </p>
+
+    <form method="POST" enctype="multipart/form-data" id="uploadForm">
+        <div class="upload-zone" id="uploadZone" onclick="document.getElementById('file').click()">
+            <i class="fa-solid fa-cloud-arrow-up"></i>
+            <p><strong>Click to upload</strong> or drag and drop</p>
+            <p style="font-size: 0.8rem; margin-top: 4px;">PDF, PNG, JPG, JPEG (Max 10MB)</p>
+            <input type="file" name="file" id="file" accept=".pdf,.png,.jpg,.jpeg" required>
+            <div class="file-name" id="fileName"></div>
+        </div>
+
+        <div class="form-actions mt-4">
+            <a href="{{ url_for('main.dashboard') }}" class="btn btn-secondary">Cancel</a>
+            <button type="submit" class="btn btn-primary" id="uploadBtn">
+                <i class="fa-solid fa-wand-magic-sparkles"></i> Upload & Extract
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+    const fileInput = document.getElementById('file');
+    const fileNameDisplay = document.getElementById('fileName');
+    const uploadZone = document.getElementById('uploadZone');
+
+    if (fileInput) {
+        fileInput.addEventListener('change', function () {
+            if (this.files && this.files[0]) {
+                fileNameDisplay.textContent = this.files[0].name;
+                uploadZone.style.borderColor = 'var(--primary-color)';
+            }
+        });
+    }
+
+    // Drag and drop support
+    if (uploadZone) {
+        ['dragenter', 'dragover'].forEach(evt => {
+            uploadZone.addEventListener(evt, function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                this.style.borderColor = 'var(--primary-color)';
+                this.style.background = 'rgba(37, 99, 235, 0.06)';
+            });
+        });
+
+        ['dragleave', 'drop'].forEach(evt => {
+            uploadZone.addEventListener(evt, function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                this.style.borderColor = '';
+                this.style.background = '';
+            });
+        });
+
+        uploadZone.addEventListener('drop', function (e) {
+            const files = e.dataTransfer.files;
+            if (files && files[0]) {
+                fileInput.files = files;
+                fileNameDisplay.textContent = files[0].name;
+            }
+        });
+    }
+</script>
+{% endblock %}

@@ -6,7 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <title>BillAutomation - Quotation System</title>
+    <meta name="description" content="QuoteGen - Professional quotation and billing automation system for GST invoicing.">
+    <title>QuoteGen - Quotation System</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -41,6 +42,9 @@
                 <a href="{{ url_for('main.create_quotation') }}" class="nav-item">
                     <i class="fa-solid fa-plus-circle"></i> New Quotation
                 </a>
+                <a href="{{ url_for('main.upload_file') }}" class="nav-item">
+                    <i class="fa-solid fa-cloud-arrow-up"></i> Upload Document
+                </a>
                 <a href="{{ url_for('main.company_settings') }}" class="nav-item">
                     <i class="fa-solid fa-building"></i> Company Settings
                 </a>
@@ -58,6 +62,24 @@
                     <div class="avatar">A</div>
                 </div>
             </header>
+
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            <div class="flash-messages">
+                {% for category, message in messages %}
+                <div class="flash-msg {{ category }}">
+                    {% if category == 'success' %}
+                    <i class="fa-solid fa-circle-check"></i>
+                    {% elif category == 'error' %}
+                    <i class="fa-solid fa-circle-exclamation"></i>
+                    {% endif %}
+                    {{ message }}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            {% endwith %}
 
             <div class="content-area">
                 {% block content %}{% endblock %}

@@ -9,8 +9,10 @@
         <p class="stat-number">{{ quotations|length }}</p>
     </div>
     <div class="card stat-card">
-        <h3>Company Name</h3>
-        <p>{{ company.name if company else 'Not Configured' }}</p>
+        <h3>Company</h3>
+        <p style="font-weight: 600; font-size: 1.05rem; margin-bottom: 4px;">
+            {{ company.name if company else 'Not Configured' }}
+        </p>
         <a href="{{ url_for('main.company_settings') }}" class="btn-text">Edit Details &rarr;</a>
     </div>
 </div>
@@ -19,11 +21,16 @@
     <div class="section-header">
         <h2>Recent Quotations</h2>
         <div>
-            <a href="{{ url_for('main.upload_file') }}" class="btn btn-secondary">Upload Document</a>
-            <a href="{{ url_for('main.create_quotation') }}" class="btn btn-primary">Create New</a>
+            <a href="{{ url_for('main.upload_file') }}" class="btn btn-secondary">
+                <i class="fa-solid fa-cloud-arrow-up"></i> Upload
+            </a>
+            <a href="{{ url_for('main.create_quotation') }}" class="btn btn-primary">
+                <i class="fa-solid fa-plus"></i> Create New
+            </a>
         </div>
     </div>
 
+    <!-- Desktop / Tablet Table -->
     <div class="table-container">
         <table>
             <thead>
@@ -41,19 +48,27 @@
                     <td>{{ q.date.strftime('%d-%m-%Y') }}</td>
                     <td>{{ q.quotation_number }}</td>
                     <td>{{ q.customer.name }}</td>
-                    <td>₹{{ "{:.2f}".format(q.grand_total) }}</td>
+                    <td style="font-weight: 600;">₹{{ "{:.2f}".format(q.grand_total) }}</td>
                     <td>
-                        <a href="{{ url_for('main.view_quotation', id=q.id) }}" class="btn btn-sm btn-outline">View</a>
-                        <form action="{{ url_for('main.delete_quotation', id=q.id) }}" method="POST"
-                            style="display:inline;"
-                            onsubmit="return confirm('Are you sure you want to delete this quotation?');">
-                            <button type="submit" class="btn btn-sm btn-danger">Delete</button>
-                        </form>
+                        <div class="action-group">
+                            <a href="{{ url_for('main.view_quotation', id=q.id) }}"
+                                class="btn btn-sm btn-outline">View</a>
+                            <form action="{{ url_for('main.delete_quotation', id=q.id) }}" method="POST"
+                                style="display:inline;"
+                                onsubmit="return confirm('Are you sure you want to delete this quotation?');">
+                                <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                            </form>
+                        </div>
                     </td>
                 </tr>
                 {% else %}
                 <tr>
-                    <td colspan="5" class="text-center">No quotations found. Create your first one!</td>
+                    <td colspan="5" class="text-center"
+                        style="padding: 40px 20px; color: var(--secondary-color); font-size: 0.9rem;">
+                        <i class="fa-solid fa-file-invoice"
+                            style="font-size: 2rem; display: block; margin-bottom: 10px; opacity: 0.4;"></i>
+                        No quotations yet. Create your first one!
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>

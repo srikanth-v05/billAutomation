@@ -4,35 +4,39 @@
 
 {% block content %}
 <div class="card settings-card">
+    <h3><i class="fa-solid fa-building" style="color: var(--primary-color);"></i> Company Information</h3>
     <form method="POST" class="styled-form">
         <div class="form-group">
-            <label>Company Name</label>
-            <input type="text" name="name" value="{{ company.name }}" required>
+            <label for="companyName">Company Name</label>
+            <input type="text" name="name" id="companyName" value="{{ company.name }}" required>
         </div>
 
         <div class="form-group">
-            <label>Address Line 1</label>
-            <input type="text" name="address_line_1" value="{{ company.address_line_1 }}" required>
+            <label for="companyAddress">Address Line 1</label>
+            <input type="text" name="address_line_1" id="companyAddress" value="{{ company.address_line_1 }}" required>
         </div>
 
         <div class="form-row">
             <div class="form-group">
-                <label>State</label>
-                <input type="text" name="state" value="{{ company.state }}" required>
+                <label for="companyState">State</label>
+                <input type="text" name="state" id="companyState" value="{{ company.state }}" required>
             </div>
             <div class="form-group">
-                <label>GSTIN</label>
-                <input type="text" name="gstin" value="{{ company.gstin }}" required>
+                <label for="companyGstin">GSTIN</label>
+                <input type="text" name="gstin" id="companyGstin" value="{{ company.gstin }}" required>
             </div>
         </div>
 
         <div class="form-group">
-            <label>Phone</label>
-            <input type="text" name="phone" value="{{ company.phone }}">
+            <label for="companyPhone">Phone</label>
+            <input type="text" name="phone" id="companyPhone" value="{{ company.phone }}">
         </div>
 
         <div class="form-actions">
-            <button type="submit" class="btn btn-primary">Save Details</button>
+            <a href="{{ url_for('main.dashboard') }}" class="btn btn-secondary">Cancel</a>
+            <button type="submit" class="btn btn-primary">
+                <i class="fa-solid fa-floppy-disk"></i> Save Details
+            </button>
         </div>
     </form>
 </div>
