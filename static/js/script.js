@@ -255,11 +255,52 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initialize quotation form if present
     if (document.getElementById('qDate')) {
-        document.getElementById('qDate').valueAsDate = new Date();
+        if (!extracted || !extracted.date) {
+            document.getElementById('qDate').valueAsDate = new Date();
+        }
     }
 
     // Add initial item row if on quotation page
     if (document.getElementById('itemsTable')) {
-        addItemRow();
+        if (extracted && extracted.items && extracted.items.length > 0) {
+            // Clear initial row
+            document.querySelector('#itemsTable tbody').innerHTML = '';
+            extracted.items.forEach(item => addExtractedItemRow(item));
+        } else {
+            addItemRow();
+        }
     }
 });
+
+function addExtractedItemRow(item) {
+    const tbody = document.querySelector('#itemsTable tbody');
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+        <td><input type="text" class="desc" placeholder="Item Name" value="${item.description || ''}"></td>
+        <td><input type="number" class="qty" value="${item.qty || 1}" oninput="calcRow(this)"></td>
+        <td><input type="number" class="rate" value="${item.rate || 0}" oninput="calcRow(this)"></td>
+        <td>
+            <select class="unit">
+                <option value="NOS" ${item.unit === 'NOS' ? 'selected' : ''}>NOS</option>
+                <option value="KGS" ${item.unit === 'KGS' ? 'selected' : ''}>KGS</option>
+                <option value="LTS" ${item.unit === 'LTS' ? 'selected' : ''}>LTS</option>
+                <option value="PKTS" ${item.unit === 'PKTS' ? 'selected' : ''}>PKTS</option>
+            </select>
+        </td>
+        <td><span class="row-basic">0.00</span></td>
+        <td>
+             <select class="gst-rate" onchange="calcRow(this)">
+                <option value="0" ${item.gst_rate == 0 ? 'selected' : ''}>0%</option>
+                <option value="5" ${item.gst_rate == 5 ? 'selected' : ''}>5%</option>
+                <option value="12" ${item.gst_rate == 12 ? 'selected' : ''}>12%</option>
+                <option value="18" ${item.gst_rate == 18 ? 'selected' : ''}>18%</option>
+                <option value="28" ${item.gst_rate == 28 ? 'selected' : ''}>28%</option>
+            </select>
+        </td>
+        <td><span class="row-total">0.00</span></td>
+        <td><button onclick="this.closest('tr').remove(); calcTotals()" class="btn-sm btn-danger">&times;</button></td>
+    `;
+    tbody.appendChild(tr);
+    // Trigger calc
+    calcRow(tr.querySelector('.qty'));
+}

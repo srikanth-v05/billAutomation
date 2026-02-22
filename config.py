@@ -22,3 +22,9 @@ class Config:
             }
         }
     }
+    
+    # Gemini API Key
+    GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY')
+    
+    # Upload folder
+    UPLOAD_FOLDER = os.path.join(os.getcwd(), 'uploads')

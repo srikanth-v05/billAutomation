@@ -18,7 +18,10 @@
 <div class="recent-section">
     <div class="section-header">
         <h2>Recent Quotations</h2>
-        <a href="{{ url_for('main.create_quotation') }}" class="btn btn-primary">Create New</a>
+        <div>
+            <a href="{{ url_for('main.upload_file') }}" class="btn btn-secondary">Upload Document</a>
+            <a href="{{ url_for('main.create_quotation') }}" class="btn btn-primary">Create New</a>
+        </div>
     </div>
 
     <div class="table-container">
