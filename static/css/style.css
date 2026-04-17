@@ -712,7 +712,7 @@ td .action-group {
     max-width: 210mm;
     min-height: auto;
     margin: 0 auto;
-    padding: 15mm;
+    padding: 8mm;
     box-shadow: var(--shadow-lg);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
@@ -725,15 +725,17 @@ td .action-group {
 
 .q-table {
     border: 2px solid #000;
-    min-width: 100%;
+    width: 100%;
+    table-layout: fixed;
 }
 
 .q-table th,
 .q-table td {
     border: 1px solid #000;
-    padding: 6px 8px;
+    padding: 5px 6px;
     text-align: center;
-    font-size: 0.85rem;
+    font-size: 0.8rem;
+    word-break: break-word;
 }
 
 .q-table td.text-left {
@@ -1356,13 +1358,13 @@ textarea {
     }
 
     .quotation-paper {
-        padding: 10mm;
+        padding: 8mm;
     }
 
     .q-table th,
     .q-table td {
-        padding: 5px 6px;
-        font-size: 0.8rem;
+        padding: 4px 5px;
+        font-size: 0.75rem;
     }
 }
 
@@ -1495,7 +1497,7 @@ textarea {
 
     /* Quotation paper */
     .quotation-paper {
-        padding: 8mm;
+        padding: 6mm;
     }
 
     .header-grid {
@@ -1512,13 +1514,13 @@ textarea {
     }
 
     .q-table {
-        font-size: 0.75rem;
+        font-size: 0.7rem;
     }
 
     .q-table th,
     .q-table td {
-        padding: 4px 3px;
-        font-size: 0.72rem;
+        padding: 3px 3px;
+        font-size: 0.68rem;
     }
 
     /* Summary */
@@ -1583,11 +1585,17 @@ textarea {
     }
 
     .quotation-paper {
-        padding: 5mm;
+        padding: 4mm;
+    }
+
+    .q-table th,
+    .q-table td {
+        padding: 2px 2px;
+        font-size: 0.65rem;
     }
 
     .title-box {
-        font-size: 0.95rem;
+        font-size: 0.9rem;
     }
 
     .company-details h3 {
