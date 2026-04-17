@@ -6,15 +6,16 @@
 <div class="card" style="max-width: 640px;">
     <h3><i class="fa-solid fa-cloud-arrow-up" style="color: var(--primary-color);"></i> Upload Invoice or Bill</h3>
     <p style="color: var(--secondary-color); margin-bottom: 20px; font-size: 0.9rem;">
-        Upload a PDF or image file and we'll extract the details automatically using AI.
+        Upload a bill or invoice document — AI will extract the details automatically.
+        Excel files are parsed directly (no AI needed).
     </p>
 
     <form method="POST" enctype="multipart/form-data" id="uploadForm">
         <div class="upload-zone" id="uploadZone" onclick="document.getElementById('file').click()">
             <i class="fa-solid fa-cloud-arrow-up"></i>
             <p><strong>Click to upload</strong> or drag and drop</p>
-            <p style="font-size: 0.8rem; margin-top: 4px;">PDF, PNG, JPG, JPEG (Max 10MB)</p>
-            <input type="file" name="file" id="file" accept=".pdf,.png,.jpg,.jpeg" required>
+            <p style="font-size: 0.8rem; margin-top: 4px;">PDF, PNG, JPG, JPEG, XLS, XLSX &nbsp;(Max 10MB)</p>
+            <input type="file" name="file" id="file" accept=".pdf,.png,.jpg,.jpeg,.xls,.xlsx" required>
             <div class="file-name" id="fileName"></div>
         </div>
 

@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+
+{% block header %}All Invoices{% endblock %}
+
+{% block content %}
+<div class="recent-section">
+    <div class="section-header">
+        <h2>Tax Invoices</h2>
+        <div>
+            <a href="{{ url_for('main.gst_report') }}" class="btn btn-secondary">
+                <i class="fa-solid fa-chart-bar"></i> GST Report
+            </a>
+            <a href="{{ url_for('main.upload_invoice_excel') }}" class="btn btn-secondary">
+                <i class="fa-solid fa-file-excel"></i> Upload Excel
+            </a>
+            <a href="{{ url_for('main.create_invoice') }}" class="btn btn-primary">
+                <i class="fa-solid fa-plus"></i> New Invoice
+            </a>
+        </div>
+    </div>
+
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Invoice #</th>
+                    <th>Date</th>
+                    <th>Customer</th>
+                    <th>GSTIN</th>
+                    <th>Taxable</th>
+                    <th>GST</th>
+                    <th>Total</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for inv in invoices %}
+                <tr>
+                    <td><strong>{{ inv.invoice_number }}</strong></td>
+                    <td>{{ inv.date.strftime('%d-%m-%Y') }}</td>
+                    <td>{{ inv.customer.name }}</td>
+                    <td style="font-size:0.8rem; color:var(--secondary-color);">{{ inv.customer.gstin or '—' }}</td>
+                    <td>₹{{ "{:.2f}".format(inv.total_basic) }}</td>
+                    <td>₹{{ "{:.2f}".format(inv.total_gst) }}</td>
+                    <td style="font-weight: 600;">₹{{ "{:.2f}".format(inv.grand_total) }}</td>
+                    <td>
+                        <div class="action-group">
+                            <a href="{{ url_for('main.view_invoice', id=inv.id) }}" class="btn btn-sm btn-outline">View</a>
+                            <a href="{{ url_for('main.edit_invoice', id=inv.id) }}" class="btn btn-sm btn-secondary">Edit</a>
+                            <form action="{{ url_for('main.delete_invoice', id=inv.id) }}" method="POST"
+                                style="display:inline;"
+                                onsubmit="return confirm('Delete invoice {{ inv.invoice_number }}?');">
+                                <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="8" class="text-center" style="padding: 48px 20px; color: var(--secondary-color);">
+                        <i class="fa-solid fa-file-invoice" style="font-size: 2.5rem; display: block; margin-bottom: 12px; opacity: 0.4;"></i>
+                        No invoices found. Create one or upload from Excel.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

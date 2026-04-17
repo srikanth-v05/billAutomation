@@ -1,8 +1,20 @@
-flask
-flask-sqlalchemy
-pymysql
-certifi
-python-dotenv
-google-generativeai
-werkzeug
-gunicorn
+# ─── Web Framework ────────────────────────────────────────────────────────────
+Flask>=3.0,<4.0
+Werkzeug>=3.0,<4.0
+
+# ─── Database ─────────────────────────────────────────────────────────────────
+Flask-SQLAlchemy>=3.1,<4.0
+PyMySQL>=1.1,<2.0           # MySQL / TiDB driver (installed as MySQLdb shim)
+cryptography>=42.0          # Required by PyMySQL for SSL
+certifi>=2024.0             # TLS certificate bundle for TiDB Cloud SSL
+
+# ─── AI — Groq ────────────────────────────────────────────────────────────────
+groq>=0.9,<1.0              # llama-3.3-70b-versatile (text) + llama-4-scout (vision)
+
+# ─── File processing ──────────────────────────────────────────────────────────
+pdfplumber>=0.11            # Extract text from PDF uploads before sending to Groq
+openpyxl>=3.1,<4.0         # Read/write .xlsx — invoice import + GST report export
+
+# ─── Environment & deployment ─────────────────────────────────────────────────
+python-dotenv>=1.0,<2.0    # Load .env into os.environ at startup
+gunicorn>=22.0              # WSGI server for production deployment

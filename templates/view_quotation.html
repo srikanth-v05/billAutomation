@@ -3,13 +3,27 @@
 {% block header %}View Quotation{% endblock %}
 
 {% block content %}
-<div class="actions-bar no-print">
+<div class="actions-bar no-print" style="flex-wrap: wrap; gap: clamp(8px, 3vw, 12px);">
     <a href="{{ url_for('main.dashboard') }}" class="btn btn-secondary">
-        <i class="fa-solid fa-arrow-left"></i> Back
+        <i class="fa-solid fa-arrow-left"></i> <span class="hide-mobile">Back</span>
     </a>
-    <button onclick="downloadPDF()" class="btn btn-primary">
-        <i class="fa-solid fa-file-pdf"></i> Download PDF
-    </button>
+    <div style="display:flex; gap:clamp(6px, 2vw, 10px); flex-wrap:wrap; flex:1;">
+        {% if quotation.invoice %}
+        <a href="{{ url_for('main.view_invoice', id=quotation.invoice.id) }}" class="btn btn-secondary">
+            <i class="fa-solid fa-file-invoice"></i> <span class="hide-mobile">View Invoice</span> {{ quotation.invoice.invoice_number }}
+        </a>
+        {% else %}
+        <form action="{{ url_for('main.quotation_to_invoice', id=quotation.id) }}" method="POST"
+            onsubmit="return confirm('Convert this quotation to a Tax Invoice?');" style="flex:1; min-width: 0;">
+            <button type="submit" class="btn btn-success" style="width: 100%;">
+                <i class="fa-solid fa-arrow-right-to-bracket"></i> <span class="hide-mobile">Convert to</span> Invoice
+            </button>
+        </form>
+        {% endif %}
+        <button onclick="downloadPDF()" class="btn btn-primary">
+            <i class="fa-solid fa-file-pdf"></i> <span class="hide-mobile">Download</span> PDF
+        </button>
+    </div>
 </div>
 
 <div class="quotation-paper" id="quotationContent">
@@ -25,6 +39,10 @@
             </div>
             <div class="meta-details">
                 <div class="meta-row">
+                    <span>QUOT. NO.:</span>
+                    <span>{{ quotation.quotation_number }}</span>
+                </div>
+                <div class="meta-row">
                     <span>DATE:</span>
                     <span>{{ quotation.date.strftime('%d.%m.%Y') }}</span>
                 </div>
@@ -39,25 +57,30 @@
 
         <div class="consumer-header">CONSUMER</div>
         <div class="customer-details">
-            <p>{{ quotation.customer.name }}</p>
+            <p><strong>{{ quotation.customer.name }}</strong></p>
             <p>{{ quotation.customer.address }}</p>
             <p>{{ quotation.customer.state }}</p>
-            <p><strong>GSTIN:</strong> {{ quotation.customer.gstin }}</p>
+            <p><strong>GSTIN:</strong> {{ quotation.customer.gstin or 'N/A' }}</p>
         </div>
     </div>
 
+    {% set is_intra = quotation.percentage_cgst > 0 %}
     <table class="q-table">
         <thead>
             <tr>
                 <th width="35">Sl.no</th>
                 <th>Description</th>
-                <th width="50">Qty</th>
-                <th width="55">Rate</th>
-                <th width="70">BASIC</th>
+                <th width="60">Qty</th>
+                <th width="70">Rate</th>
+                <th width="75">BASIC</th>
                 <th width="45">GST %</th>
-                <th width="65">CGST</th>
-                <th width="65">SGST</th>
-                <th width="75">Amount</th>
+                {% if is_intra %}
+                <th width="70">CGST</th>
+                <th width="70">SGST</th>
+                {% else %}
+                <th width="140" colspan="2">IGST</th>
+                {% endif %}
+                <th width="80">Amount</th>
             </tr>
         </thead>
         <tbody>
@@ -69,8 +92,12 @@
                 <td>{{ "{:.2f}".format(item.rate) }}</td>
                 <td>{{ "{:.2f}".format(item.basic_amount) }}</td>
                 <td>{{ "{:g}".format(item.gst_rate) }}%</td>
+                {% if is_intra %}
                 <td>{{ "{:.2f}".format(item.gst_amount / 2) }}</td>
                 <td>{{ "{:.2f}".format(item.gst_amount / 2) }}</td>
+                {% else %}
+                <td colspan="2">{{ "{:.2f}".format(item.gst_amount) }}</td>
+                {% endif %}
                 <td>{{ "{:.0f}".format(item.total_amount) }}</td>
             </tr>
             {% endfor %}
@@ -78,16 +105,29 @@
         <tfoot>
             <tr>
                 <td colspan="5" class="text-left" style="vertical-align: top;">
-                    Total Rupees. (in words) <br>
-                    <span id="amountInWords">Rupees {{ amount_in_words }}</span>
+                    Total Rupees. (in words)<br>
+                    <span style="font-style: italic;">Rupees {{ amount_in_words }}</span>
                 </td>
                 <td colspan="2" style="text-align: right; line-height: 1.8;">
-                    BASIC<br>ADD CGST<br>ADD SGST<br><strong>TOTAL</strong>
+                    BASIC<br>
+                    {% if is_intra %}
+                    ADD CGST {{ quotation.percentage_cgst }}%<br>
+                    ADD SGST {{ quotation.percentage_sgst }}%<br>
+                    {% else %}
+                    ADD IGST {{ quotation.percentage_igst }}%<br>
+                    <br>
+                    {% endif %}
+                    <strong>TOTAL</strong>
                 </td>
                 <td colspan="2" class="text-right" style="line-height: 1.8;">
                     {{ "{:.2f}".format(quotation.total_basic) }}<br>
+                    {% if is_intra %}
                     {{ "{:.2f}".format(quotation.total_gst / 2) }}<br>
                     {{ "{:.2f}".format(quotation.total_gst / 2) }}<br>
+                    {% else %}
+                    {{ "{:.2f}".format(quotation.total_gst) }}<br>
+                    <br>
+                    {% endif %}
                     <strong>{{ "{:.0f}".format(quotation.grand_total) }}</strong>
                 </td>
             </tr>
@@ -98,10 +138,7 @@
 <script>
     function downloadPDF() {
         const element = document.getElementById('quotationContent');
-        if (!element) {
-            alert('Error: Quotation content not found.');
-            return;
-        }
+        if (!element) { alert('Content not found.'); return; }
 
         const opt = {
             margin: 0.2,
@@ -111,20 +148,16 @@
             jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
         };
 
-        // Show loading state
         const btn = event.target.closest('.btn');
-        const originalText = btn.innerHTML;
+        const orig = btn.innerHTML;
         btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Generating...';
         btn.disabled = true;
 
-        html2pdf().set(opt).from(element).save().then(function () {
-            btn.innerHTML = originalText;
-            btn.disabled = false;
-        }).catch(function (err) {
-            console.error('PDF generation error:', err);
-            btn.innerHTML = originalText;
-            btn.disabled = false;
-            alert('Error generating PDF. Please try again.');
+        html2pdf().set(opt).from(element).save().then(() => {
+            btn.innerHTML = orig; btn.disabled = false;
+        }).catch(err => {
+            console.error(err); btn.innerHTML = orig; btn.disabled = false;
+            alert('Error generating PDF.');
         });
     }
 </script>

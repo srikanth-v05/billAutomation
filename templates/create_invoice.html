@@ -1,0 +1,206 @@
+{% extends 'base.html' %}
+
+{% block header %}{% if editing %}Edit Invoice{% else %}New Invoice{% endif %}{% endblock %}
+
+{% block content %}
+<div class="create-quotation-container">
+    <!-- Invoice Number Banner -->
+    <div class="invoice-number-banner card" style="background: linear-gradient(135deg, #1e3a8a, #2563eb); color:white; border:none; padding:clamp(12px, 5vw, 24px); margin-bottom:16px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:clamp(8px, 3vw, 16px); min-width:0;">
+            <div style="flex: 0 1 auto; min-width:0;">
+                <div style="font-size:clamp(0.7rem, 2vw, 0.8rem); opacity:0.8; text-transform:uppercase; letter-spacing:0.05em;">Tax Invoice Number</div>
+                <div style="font-size:clamp(1.3rem, 6vw, 1.8rem); font-weight:700; letter-spacing:0.02em; word-break:break-word;" id="invoiceNumDisplay">{{ next_invoice_number }}</div>
+            </div>
+            <div style="text-align:right; flex: 0 1 auto;">
+                <div style="font-size:clamp(0.7rem, 2vw, 0.8rem); opacity:0.8; margin-bottom:4px;">Override (optional)</div>
+                <input type="number" id="invoiceNumOverride" min="1"
+                    value="{{ next_invoice_number_int }}"
+                    style="width:clamp(70px, 20vw, 100px); background:rgba(255,255,255,0.2); border:1px solid rgba(255,255,255,0.4); color:white; border-radius:6px; padding:8px; font-size:clamp(0.9rem, 2vw, 1rem); text-align:center; font-weight:600;"
+                    oninput="updateInvoiceNumDisplay(this.value)">
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h3><i class="fa-solid fa-user" style="color: var(--primary-color);"></i> Customer Details</h3>
+        <div class="form-row">
+            <div class="form-group">
+                <label for="custName">Customer Name</label>
+                <div class="search-container">
+                    <input type="text" id="custName" placeholder="Search or enter name" autocomplete="off"
+                        onkeyup="searchCustomer(this.value)">
+                    <input type="hidden" id="custId">
+                    <div id="custSearchResults" class="dropdown-menu"
+                        style="display:none; position:absolute; width:100%; z-index:1000;"></div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="qDate">Invoice Date</label>
+                <input type="date" id="qDate">
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="custAddr">Address</label>
+            <input type="text" id="custAddr" placeholder="Enter address">
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label for="custGst">GSTIN</label>
+                <input type="text" id="custGst" placeholder="e.g. 33ABCDE1234F1Z5" oninput="updateTaxType()">
+            </div>
+            <div class="form-group">
+                <label for="custState">State</label>
+                <input type="text" id="custState" placeholder="e.g. Tamil Nadu">
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="placeOfSupply">Place of Supply</label>
+            <input type="text" id="placeOfSupply" placeholder="e.g. Puducherry">
+        </div>
+    </div>
+
+    <div class="card mt-4">
+        <div class="items-header">
+            <h3 style="margin-bottom: 0;"><i class="fa-solid fa-list" style="color: var(--primary-color);"></i> Items</h3>
+            <button type="button" class="btn btn-secondary" onclick="addItemRow()">
+                <i class="fa-solid fa-plus"></i> Add Item
+            </button>
+        </div>
+
+        <div class="table-responsive">
+            <table class="items-table" id="itemsTable">
+                <thead>
+                    <tr>
+                        <th>Description</th>
+                        <th width="70">Qty</th>
+                        <th width="90">Rate</th>
+                        <th width="75">Unit</th>
+                        <th width="90">Basic</th>
+                        <th width="90">GST %</th>
+                        <th width="90">Total</th>
+                        <th width="46"></th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card mt-4 summary-card">
+        <div class="summary-row">
+            <span>Taxable Value:</span>
+            <span id="displayBasic">₹0.00</span>
+        </div>
+        <div class="summary-row tax-details" id="taxBreakdown" style="display:none;"></div>
+        <div class="summary-row">
+            <span>Total GST:</span>
+            <span id="displayGst">₹0.00</span>
+        </div>
+        <div class="summary-row grand-total" style="border-top: 1px solid rgba(255,255,255,0.3); margin-top: 4px;">
+            <span>Grand Total:</span>
+            <span id="displayGrand">₹0.00</span>
+        </div>
+    </div>
+
+    <div class="form-actions mt-4">
+        <a href="{{ url_for('main.invoices') }}" class="btn btn-secondary">Cancel</a>
+        <button type="button" class="btn btn-primary btn-lg" onclick="saveInvoice()">
+            <i class="fa-solid fa-check-circle"></i>
+            {% if editing %}Update Invoice{% else %}Create Invoice{% endif %}
+        </button>
+    </div>
+</div>
+
+<script>
+    // Pass server-side data to JS
+    var INVOICE_MODE = 'invoice';
+    var SAVE_URL = '{{ url_for("main.edit_invoice", id=editing.id) if editing else url_for("main.create_invoice") }}';
+    var editing = {{ editing | tojson if editing else 'null' }};
+    var extracted = null;
+
+    function updateInvoiceNumDisplay(val) {
+        const fy = document.getElementById('invoiceNumDisplay').textContent.split('/')[0] || '';
+        const num = parseInt(val) || 1;
+        document.getElementById('invoiceNumDisplay').textContent = fy + '/' + String(num).padStart(3, '0');
+    }
+
+    function saveInvoice() {
+        const custName = (document.getElementById('custName')?.value || '').trim();
+        const custGst  = (document.getElementById('custGst')?.value  || '').trim();
+        const custAddr = (document.getElementById('custAddr')?.value || '').trim();
+        const custState = (document.getElementById('custState')?.value || '').trim();
+        const qDate = (document.getElementById('qDate')?.value || '').trim();
+
+        if (!custName) { alert('Please enter Customer Name.'); document.getElementById('custName')?.focus(); return; }
+        if (!custGst)  { alert('Please enter Customer GSTIN.'); document.getElementById('custGst')?.focus(); return; }
+        if (!custAddr) { alert('Please enter Customer Address.'); document.getElementById('custAddr')?.focus(); return; }
+        if (!custState){ alert('Please enter Customer State.'); document.getElementById('custState')?.focus(); return; }
+        if (!qDate)    { alert('Please select a date.'); document.getElementById('qDate')?.focus(); return; }
+
+        const itemRows = document.querySelectorAll('#itemsTable tbody tr');
+        if (itemRows.length === 0) { alert('Please add at least one item.'); return; }
+
+        const totals = calcTotals();
+        const items = [];
+        let invalid = false;
+
+        itemRows.forEach((tr, i) => {
+            const desc = (tr.querySelector('.desc')?.value || '').trim();
+            if (!desc) { invalid = true; alert(`Enter description for item ${i + 1}.`); tr.querySelector('.desc')?.focus(); return; }
+            items.push({
+                description: desc,
+                qty:      tr.querySelector('.qty')?.value  || 1,
+                rate:     tr.querySelector('.rate')?.value || 0,
+                unit:     tr.querySelector('.unit')?.value || 'NOS',
+                basic:    tr.dataset.basic    || 0,
+                gst:      tr.dataset.gst      || 0,
+                gst_rate: tr.dataset.gstRate  || 0,
+                total:    tr.dataset.total    || 0,
+            });
+        });
+        if (invalid) return;
+
+        const overrideInt = parseInt(document.getElementById('invoiceNumOverride')?.value) || null;
+
+        const data = {
+            date: qDate,
+            place_of_supply: (document.getElementById('placeOfSupply')?.value || '').trim(),
+            invoice_number_int: overrideInt,
+            customer: {
+                id:      document.getElementById('custId')?.value || '',
+                name:    custName,
+                address: custAddr,
+                gstin:   custGst,
+                state:   custState,
+            },
+            items:  items,
+            totals: totals,
+        };
+
+        const saveBtn = document.querySelector('.form-actions .btn-primary');
+        let orig = '';
+        if (saveBtn) { orig = saveBtn.innerHTML; saveBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving...'; saveBtn.disabled = true; }
+
+        fetch(SAVE_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+        })
+        .then(r => r.json())
+        .then(res => {
+            if (res.success) {
+                window.location.href = res.redirect_url;
+            } else {
+                alert('Error: ' + (res.error || 'Unknown error'));
+                if (saveBtn) { saveBtn.innerHTML = orig; saveBtn.disabled = false; }
+            }
+        })
+        .catch(e => {
+            console.error(e);
+            alert('Network error. Please try again.');
+            if (saveBtn) { saveBtn.innerHTML = orig; saveBtn.disabled = false; }
+        });
+    }
+</script>
+
+{% endblock %}

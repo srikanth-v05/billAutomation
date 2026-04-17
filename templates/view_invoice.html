@@ -1,0 +1,171 @@
+{% extends 'base.html' %}
+
+{% block header %}Tax Invoice{% endblock %}
+
+{% block content %}
+<div class="actions-bar no-print" style="flex-wrap: wrap; gap: clamp(8px, 3vw, 12px);">
+    <a href="{{ url_for('main.invoices') }}" class="btn btn-secondary">
+        <i class="fa-solid fa-arrow-left"></i> <span class="hide-mobile">Back</span>
+    </a>
+    <div style="display:flex; gap:clamp(6px, 2vw, 10px); flex-wrap:wrap; flex:1;">
+        <a href="{{ url_for('main.edit_invoice', id=invoice.id) }}" class="btn btn-secondary" style="flex:1; min-width: 80px;">
+            <i class="fa-solid fa-pen-to-square"></i> <span class="hide-mobile">Edit</span>
+        </a>
+        <button onclick="downloadPDF()" class="btn btn-primary" style="flex:1; min-width: 80px;">
+            <i class="fa-solid fa-file-pdf"></i> <span class="hide-mobile">Download</span> PDF
+        </button>
+    </div>
+</div>
+
+<div class="quotation-paper" id="invoiceContent">
+    <div class="q-header">
+        <h2 class="text-center title-box">TAX INVOICE</h2>
+        <div class="header-grid">
+            <div class="company-details">
+                <h3>{{ company.name }}</h3>
+                <p>{{ company.address_line_1 }}</p>
+                <p>{{ company.state }}</p>
+                <p><strong>GSTIN: {{ company.gstin }}</strong></p>
+                <p>Phone: {{ company.phone }}</p>
+            </div>
+            <div class="meta-details">
+                <div class="meta-row">
+                    <span>INVOICE NO.:</span>
+                    <span><strong>{{ invoice.invoice_number }}</strong></span>
+                </div>
+                <div class="meta-row">
+                    <span>DATE:</span>
+                    <span>{{ invoice.date.strftime('%d.%m.%Y') }}</span>
+                </div>
+                {% if invoice.place_of_supply %}
+                <div class="meta-row">
+                    <span>PLACE OF SUPPLY:</span>
+                    <span>{{ invoice.place_of_supply }}</span>
+                </div>
+                {% endif %}
+                <div class="meta-row">
+                    <span>TYPE:</span>
+                    <span>{{ 'Intra-State' if invoice.is_intra_state else 'Inter-State' }}</span>
+                </div>
+                {% if invoice.quotation %}
+                <div class="meta-row">
+                    <span>REF. QUOT.:</span>
+                    <span>{{ invoice.quotation.quotation_number }}</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="consumer-header">BILL TO</div>
+        <div class="customer-details">
+            <p><strong>{{ invoice.customer.name }}</strong></p>
+            <p>{{ invoice.customer.address }}</p>
+            <p>{{ invoice.customer.state }}</p>
+            <p><strong>GSTIN:</strong> {{ invoice.customer.gstin or 'N/A' }}</p>
+        </div>
+    </div>
+
+    {% set is_intra = invoice.is_intra_state %}
+    <table class="q-table">
+        <thead>
+            <tr>
+                <th width="35">Sl.</th>
+                <th>Description of Goods / Services</th>
+                <th width="60">Qty</th>
+                <th width="70">Rate (₹)</th>
+                <th width="80">Taxable (₹)</th>
+                <th width="45">GST%</th>
+                {% if is_intra %}
+                <th width="70">CGST (₹)</th>
+                <th width="70">SGST (₹)</th>
+                {% else %}
+                <th width="140" colspan="2">IGST (₹)</th>
+                {% endif %}
+                <th width="85">Total (₹)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in invoice.items %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td class="text-left">{{ item.description }}</td>
+                <td>{{ item.qty }} {{ item.unit }}</td>
+                <td class="text-right">{{ "{:.2f}".format(item.rate) }}</td>
+                <td class="text-right">{{ "{:.2f}".format(item.basic_amount) }}</td>
+                <td>{{ "{:g}".format(item.gst_rate) }}%</td>
+                {% if is_intra %}
+                <td class="text-right">{{ "{:.2f}".format(item.cgst_amount) }}</td>
+                <td class="text-right">{{ "{:.2f}".format(item.sgst_amount) }}</td>
+                {% else %}
+                <td class="text-right" colspan="2">{{ "{:.2f}".format(item.igst_amount) }}</td>
+                {% endif %}
+                <td class="text-right"><strong>{{ "{:.2f}".format(item.total_amount) }}</strong></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        <tfoot>
+            <tr>
+                <td colspan="5" class="text-left" style="vertical-align:top; padding:8px;">
+                    <strong>Total Amount (in words):</strong><br>
+                    <em>Rupees {{ amount_in_words }}</em>
+                </td>
+                <td colspan="2" style="text-align:right; line-height: 2; vertical-align:middle;">
+                    Taxable Value<br>
+                    {% if is_intra %}
+                    CGST @ {{ invoice.percentage_cgst }}%<br>
+                    SGST @ {{ invoice.percentage_sgst }}%<br>
+                    {% else %}
+                    IGST @ {{ invoice.percentage_igst }}%<br>
+                    <br>
+                    {% endif %}
+                    <strong>Grand Total</strong>
+                </td>
+                <td colspan="2" class="text-right" style="line-height:2; vertical-align:middle;">
+                    ₹{{ "{:.2f}".format(invoice.total_basic) }}<br>
+                    {% if is_intra %}
+                    ₹{{ "{:.2f}".format(invoice.total_cgst) }}<br>
+                    ₹{{ "{:.2f}".format(invoice.total_sgst) }}<br>
+                    {% else %}
+                    ₹{{ "{:.2f}".format(invoice.total_igst) }}<br>
+                    <br>
+                    {% endif %}
+                    <strong>₹{{ "{:.2f}".format(invoice.grand_total) }}</strong>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="9" style="text-align:center; font-size:0.8rem; padding:6px; border-top:1px solid #000;">
+                    This is a computer-generated invoice. &nbsp;|&nbsp;
+                    Subject to {{ company.state }} jurisdiction.
+                </td>
+            </tr>
+        </tfoot>
+    </table>
+</div>
+
+<script>
+    function downloadPDF() {
+        const element = document.getElementById('invoiceContent');
+        if (!element) { alert('Content not found.'); return; }
+
+        const opt = {
+            margin: 0.2,
+            filename: 'Invoice_{{ invoice.invoice_number | replace("/", "-") }}.pdf',
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true },
+            jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+        };
+
+        const btn = event.target.closest('.btn');
+        const orig = btn.innerHTML;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Generating...';
+        btn.disabled = true;
+
+        html2pdf().set(opt).from(element).save().then(() => {
+            btn.innerHTML = orig; btn.disabled = false;
+        }).catch(err => {
+            console.error(err); btn.innerHTML = orig; btn.disabled = false;
+            alert('Error generating PDF.');
+        });
+    }
+</script>
+{% endblock %}

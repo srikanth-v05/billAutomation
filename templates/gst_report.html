@@ -1,0 +1,161 @@
+{% extends 'base.html' %}
+
+{% block header %}GST Monthly Report{% endblock %}
+
+{% block content %}
+<!-- Month/Year Selector -->
+<div class="card" style="margin-bottom:20px;">
+    <h3><i class="fa-solid fa-filter" style="color:var(--primary-color);"></i> Select Period</h3>
+    <form method="POST" action="{{ url_for('main.gst_report') }}" style="display:flex; gap:clamp(8px, 3vw, 12px); align-items:flex-end; flex-wrap:wrap;">
+        <div class="form-group" style="margin-bottom:0; flex:1; min-width:120px;">
+            <label for="selMonth">Month</label>
+            <select name="month" id="selMonth">
+                {% for m_num, m_name in months %}
+                <option value="{{ m_num }}" {% if m_num == selected_month %}selected{% endif %}>{{ m_name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group" style="margin-bottom:0; flex:0 1 100px;">
+            <label for="selYear">Year</label>
+            <select name="year" id="selYear">
+                {% for y in years %}
+                <option value="{{ y }}" {% if y == selected_year %}selected{% endif %}>{{ y }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <button type="submit" class="btn btn-primary" style="margin-bottom:0; flex:0 1 auto; white-space:nowrap;">
+            <i class="fa-solid fa-magnifying-glass"></i> <span class="hide-mobile">Generate</span>
+        </button>
+        {% if report_rows %}
+        <a href="{{ url_for('main.export_gst_report', month=selected_month, year=selected_year) }}"
+           class="btn btn-secondary" style="margin-bottom:0; flex:0 1 auto;">
+            <i class="fa-solid fa-file-excel"></i> <span class="hide-mobile">Export</span> Excel
+        </a>
+        {% endif %}
+    </form>
+</div>
+
+{% if report_rows %}
+<!-- Summary Cards -->
+<div class="gst-summary-grid">
+    <div class="card gst-sum-card">
+        <div class="gst-sum-label">Taxable Value</div>
+        <div class="gst-sum-value">₹{{ "{:,.2f}".format(totals.basic) }}</div>
+    </div>
+    {% if totals.cgst > 0 %}
+    <div class="card gst-sum-card">
+        <div class="gst-sum-label">Total CGST</div>
+        <div class="gst-sum-value">₹{{ "{:,.2f}".format(totals.cgst) }}</div>
+    </div>
+    <div class="card gst-sum-card">
+        <div class="gst-sum-label">Total SGST</div>
+        <div class="gst-sum-value">₹{{ "{:,.2f}".format(totals.sgst) }}</div>
+    </div>
+    {% endif %}
+    {% if totals.igst > 0 %}
+    <div class="card gst-sum-card">
+        <div class="gst-sum-label">Total IGST</div>
+        <div class="gst-sum-value">₹{{ "{:,.2f}".format(totals.igst) }}</div>
+    </div>
+    {% endif %}
+    <div class="card gst-sum-card gst-sum-total">
+        <div class="gst-sum-label">Grand Total</div>
+        <div class="gst-sum-value">₹{{ "{:,.2f}".format(totals.total) }}</div>
+    </div>
+</div>
+
+<!-- Report Table -->
+<div class="card" style="padding:0; overflow:hidden;">
+    <div style="padding:16px 20px; border-bottom:1px solid var(--border-color); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+        <h3 style="margin:0;">
+            Invoice Register —
+            {% for m_num, m_name in months %}{% if m_num == selected_month %}{{ m_name }}{% endif %}{% endfor %}
+            {{ selected_year }}
+        </h3>
+        <span style="font-size:0.85rem; color:var(--secondary-color);">
+            {{ report_rows | selectattr('empty', 'equalto', false) | list | length }} invoices
+            {% set gaps = report_rows | selectattr('empty', 'equalto', true) | list | length %}
+            {% if gaps %} | <span style="color:var(--warning-color);">{{ gaps }} gap(s)</span>{% endif %}
+        </span>
+    </div>
+    <div class="table-container" style="border:none; border-radius:0;">
+        <table class="gst-report-table">
+            <thead>
+                <tr>
+                    <th>Bill No.</th>
+                    <th>Date</th>
+                    <th>Customer</th>
+                    <th>GSTIN</th>
+                    <th>Place of Supply</th>
+                    <th class="text-right">Taxable (₹)</th>
+                    <th class="text-right">CGST (₹)</th>
+                    <th class="text-right">SGST (₹)</th>
+                    <th class="text-right">IGST (₹)</th>
+                    <th class="text-right">Total (₹)</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in report_rows %}
+                {% if row.empty %}
+                <tr class="gst-empty-row">
+                    <td><strong style="color:var(--secondary-color);">{{ row.formatted }}</strong></td>
+                    <td colspan="9" style="color:var(--secondary-color); font-style:italic; font-size:0.85rem;">
+                        — Invoice not found / cancelled —
+                    </td>
+                    <td></td>
+                </tr>
+                {% else %}
+                {% set inv = row.invoice %}
+                <tr>
+                    <td>
+                        <a href="{{ url_for('main.view_invoice', id=inv.id) }}" style="font-weight:600; color:var(--primary-color); text-decoration:none;">
+                            {{ inv.invoice_number }}
+                        </a>
+                    </td>
+                    <td>{{ inv.date.strftime('%d-%m-%Y') }}</td>
+                    <td>{{ inv.customer.name }}</td>
+                    <td style="font-size:0.82rem;">{{ inv.customer.gstin or '—' }}</td>
+                    <td>{{ inv.place_of_supply or '—' }}</td>
+                    <td class="text-right">{{ "{:,.2f}".format(inv.total_basic) }}</td>
+                    <td class="text-right">{{ "{:,.2f}".format(inv.total_cgst) if inv.total_cgst else '—' }}</td>
+                    <td class="text-right">{{ "{:,.2f}".format(inv.total_sgst) if inv.total_sgst else '—' }}</td>
+                    <td class="text-right">{{ "{:,.2f}".format(inv.total_igst) if inv.total_igst else '—' }}</td>
+                    <td class="text-right"><strong>{{ "{:,.2f}".format(inv.grand_total) }}</strong></td>
+                    <td>
+                        <a href="{{ url_for('main.view_invoice', id=inv.id) }}" class="btn btn-sm btn-outline">View</a>
+                    </td>
+                </tr>
+                {% endif %}
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr class="gst-totals-row">
+                    <td colspan="5"><strong>TOTAL</strong></td>
+                    <td class="text-right"><strong>₹{{ "{:,.2f}".format(totals.basic) }}</strong></td>
+                    <td class="text-right"><strong>₹{{ "{:,.2f}".format(totals.cgst) }}</strong></td>
+                    <td class="text-right"><strong>₹{{ "{:,.2f}".format(totals.sgst) }}</strong></td>
+                    <td class="text-right"><strong>₹{{ "{:,.2f}".format(totals.igst) }}</strong></td>
+                    <td class="text-right"><strong>₹{{ "{:,.2f}".format(totals.total) }}</strong></td>
+                    <td></td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+</div>
+
+{% else %}
+<div class="card" style="text-align:center; padding:60px 20px; color:var(--secondary-color);">
+    <i class="fa-solid fa-chart-bar" style="font-size:3rem; display:block; margin-bottom:16px; opacity:0.35;"></i>
+    <h3 style="color:var(--secondary-color); font-weight:500;">No invoices found for
+        {% for m_num, m_name in months %}{% if m_num == selected_month %}{{ m_name }}{% endif %}{% endfor %}
+        {{ selected_year }}.
+    </h3>
+    <p style="margin-top:8px; font-size:0.9rem;">
+        Try a different month, or
+        <a href="{{ url_for('main.create_invoice') }}" style="color:var(--primary-color);">create an invoice</a>.
+    </p>
+</div>
+{% endif %}
+
+{% endblock %}

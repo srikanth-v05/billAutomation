@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+
+{% block header %}Upload Invoices from Excel{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width:680px;">
+    <h3><i class="fa-solid fa-file-excel" style="color:#16a34a;"></i> Import Invoices from Excel</h3>
+    <p style="color:var(--secondary-color); margin-bottom:20px; font-size:0.9rem;">
+        Upload an Excel file (.xlsx / .xls) to bulk-create or update invoices. Existing invoice numbers
+        in the same financial year will be <strong>updated</strong>. New numbers will be <strong>created</strong>.
+    </p>
+
+    <!-- Column reference -->
+    <div class="card" style="background:var(--bg-color); border:1px dashed var(--border-color); margin-bottom:20px; padding:16px;">
+        <h4 style="margin-bottom:12px; font-size:0.9rem; color:var(--text-color);">
+            <i class="fa-solid fa-table-columns" style="color:var(--primary-color);"></i> Expected Column Format
+        </h4>
+        <div class="table-container" style="border:none;">
+            <table style="font-size:0.82rem; min-width:500px;">
+                <thead>
+                    <tr>
+                        <th>Col</th><th>Field</th><th>Required</th><th>Example</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>A</td><td>Invoice No</td><td><span class="badge badge-danger">Yes</span></td><td>1</td></tr>
+                    <tr><td>B</td><td>Date</td><td><span class="badge badge-danger">Yes</span></td><td>2025-04-01</td></tr>
+                    <tr><td>C</td><td>Customer Name</td><td><span class="badge badge-danger">Yes</span></td><td>ABC Pvt Ltd</td></tr>
+                    <tr><td>D</td><td>Customer GSTIN</td><td><span class="badge badge-pending">No</span></td><td>33ABCDE1234F1Z5</td></tr>
+                    <tr><td>E</td><td>Customer State</td><td><span class="badge badge-pending">No</span></td><td>Tamil Nadu</td></tr>
+                    <tr><td>F</td><td>Place of Supply</td><td><span class="badge badge-pending">No</span></td><td>Tamil Nadu</td></tr>
+                    <tr><td>G</td><td>Item Description</td><td><span class="badge badge-danger">Yes</span></td><td>Item A</td></tr>
+                    <tr><td>H</td><td>Qty</td><td><span class="badge badge-danger">Yes</span></td><td>2</td></tr>
+                    <tr><td>I</td><td>Rate (₹)</td><td><span class="badge badge-danger">Yes</span></td><td>5000</td></tr>
+                    <tr><td>J</td><td>Unit</td><td><span class="badge badge-pending">No</span></td><td>NOS</td></tr>
+                    <tr><td>K</td><td>GST Rate (%)</td><td><span class="badge badge-pending">No</span></td><td>18</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <p style="margin-top:12px; font-size:0.82rem; color:var(--secondary-color);">
+            <i class="fa-solid fa-circle-info"></i>
+            For invoices with multiple items, repeat the same Invoice No. across rows — they'll be merged into one invoice.
+        </p>
+        <a href="{{ url_for('main.download_invoice_template') }}" class="btn btn-secondary btn-sm" style="margin-top:12px;">
+            <i class="fa-solid fa-download"></i> Download Sample Template
+        </a>
+    </div>
+
+    <form method="POST" enctype="multipart/form-data" id="uploadForm">
+        <div class="upload-zone" id="uploadZone" onclick="document.getElementById('excelFile').click()">
+            <i class="fa-solid fa-file-excel" style="color:#16a34a;"></i>
+            <p><strong>Click to upload</strong> or drag and drop</p>
+            <p style="font-size:0.8rem; margin-top:4px;">.xlsx / .xls only</p>
+            <input type="file" name="file" id="excelFile" accept=".xlsx,.xls" required>
+            <div class="file-name" id="fileName"></div>
+        </div>
+
+        <div class="form-actions mt-4">
+            <a href="{{ url_for('main.invoices') }}" class="btn btn-secondary">Cancel</a>
+            <button type="submit" class="btn btn-primary" id="uploadBtn">
+                <i class="fa-solid fa-file-import"></i> Import Invoices
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+    const fileInput = document.getElementById('excelFile');
+    const fileNameDisplay = document.getElementById('fileName');
+    const uploadZone = document.getElementById('uploadZone');
+    const uploadBtn = document.getElementById('uploadBtn');
+
+    if (fileInput) {
+        fileInput.addEventListener('change', function () {
+            if (this.files && this.files[0]) {
+                fileNameDisplay.textContent = this.files[0].name;
+                uploadZone.style.borderColor = 'var(--primary-color)';
+            }
+        });
+    }
+
+    if (uploadZone) {
+        ['dragenter', 'dragover'].forEach(evt => {
+            uploadZone.addEventListener(evt, function (e) {
+                e.preventDefault(); e.stopPropagation();
+                this.style.borderColor = 'var(--primary-color)';
+                this.style.background = 'rgba(37, 99, 235, 0.06)';
+            });
+        });
+        ['dragleave', 'drop'].forEach(evt => {
+            uploadZone.addEventListener(evt, function (e) {
+                e.preventDefault(); e.stopPropagation();
+                this.style.borderColor = '';
+                this.style.background = '';
+            });
+        });
+        uploadZone.addEventListener('drop', function (e) {
+            const files = e.dataTransfer.files;
+            if (files && files[0]) {
+                fileInput.files = files;
+                fileNameDisplay.textContent = files[0].name;
+            }
+        });
+    }
+
+    document.getElementById('uploadForm')?.addEventListener('submit', function () {
+        if (uploadBtn) {
+            uploadBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Importing...';
+            uploadBtn.disabled = true;
+        }
+    });
+</script>
+{% endblock %}

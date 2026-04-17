@@ -270,6 +270,12 @@ body {
     border: 1px solid #fecaca;
 }
 
+.flash-msg.warning {
+    background: #fffbeb;
+    color: #92400e;
+    border: 1px solid #fde68a;
+}
+
 @keyframes slideDown {
     from { opacity: 0; transform: translateY(-8px); }
     to { opacity: 1; transform: translateY(0); }
@@ -905,6 +911,130 @@ td .action-group {
 .mb-2 { margin-bottom: 0.5rem; }
 .mb-4 { margin-bottom: 1rem; }
 
+/* ── Badges ── */
+.badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-decoration: none;
+    white-space: nowrap;
+}
+.badge-success  { background: #dcfce7; color: #166534; }
+.badge-pending  { background: #fef3c7; color: #92400e; }
+.badge-danger   { background: #fee2e2; color: #991b1b; }
+.badge-warning  { background: #fef3c7; color: #92400e; }
+
+/* ── Success Button ── */
+.btn-success {
+    background: var(--success-color);
+    color: white;
+}
+.btn-success:hover {
+    background: #15803d;
+}
+
+/* ── Sidebar Section Labels ── */
+.nav-section-label {
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.3);
+    padding: 12px 14px 4px;
+    margin-top: 4px;
+}
+
+/* ── GST Report Summary Grid ── */
+.gst-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.gst-sum-card {
+    padding: 16px 20px;
+    border-left: 4px solid var(--primary-color);
+    position: relative;
+}
+
+.gst-sum-card.gst-sum-total {
+    border-left-color: #7c3aed;
+}
+
+.gst-sum-label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--secondary-color);
+    margin-bottom: 6px;
+}
+
+.gst-sum-value {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--text-color);
+}
+
+.gst-sum-total .gst-sum-value {
+    color: #7c3aed;
+}
+
+/* ── GST Report Table ── */
+.gst-report-table {
+    min-width: 900px;
+}
+
+.gst-report-table th,
+.gst-report-table td {
+    padding: 10px 12px;
+    font-size: 0.85rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.gst-report-table th {
+    background: var(--bg-color);
+    font-size: 0.75rem;
+    white-space: nowrap;
+    position: sticky;
+    top: 0;
+}
+
+/* Missing invoice rows */
+.gst-empty-row {
+    background: #f8fafc;
+}
+
+.gst-empty-row td {
+    border-bottom: 1px dashed #e2e8f0;
+}
+
+/* Totals row */
+.gst-totals-row {
+    background: #eff6ff;
+    border-top: 2px solid var(--primary-color);
+}
+
+.gst-totals-row td {
+    font-weight: 600;
+    padding: 12px;
+    border-bottom: none;
+}
+
+/* ── Invoice Number Banner ── */
+.invoice-number-banner input::placeholder {
+    color: rgba(255,255,255,0.5);
+}
+.invoice-number-banner input:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(255,255,255,0.3);
+    background: rgba(255,255,255,0.3) !important;
+}
+
 /* ── Mobile Card View for Tables ── */
 .mobile-cards {
     display: none;
@@ -958,6 +1088,255 @@ td .action-group {
 .mobile-card-actions .btn,
 .mobile-card-actions .btn-sm {
     flex: 1;
+}
+
+/* ═══════════════════════════════
+   RESPONSIVE UTILITIES
+   ═══════════════════════════════ */
+
+/* Responsive spacing */
+.responsive-container {
+    width: 100%;
+    max-width: 100%;
+    padding: 0 16px;
+}
+
+@media (min-width: 640px) {
+    .responsive-container {
+        padding: 0 24px;
+    }
+}
+
+@media (min-width: 1024px) {
+    .responsive-container {
+        padding: 0 32px;
+    }
+}
+
+/* Responsive text sizes */
+.responsive-heading {
+    font-size: clamp(1.25rem, 5vw, 2rem);
+    line-height: 1.2;
+}
+
+.responsive-subheading {
+    font-size: clamp(1rem, 4vw, 1.5rem);
+    line-height: 1.3;
+}
+
+.responsive-text {
+    font-size: clamp(0.875rem, 2vw, 1rem);
+}
+
+/* Responsive grid */
+.responsive-grid-2 {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+}
+
+@media (min-width: 768px) {
+    .responsive-grid-2 {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+.responsive-grid-3 {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+}
+
+@media (min-width: 768px) {
+    .responsive-grid-3 {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (min-width: 1024px) {
+    .responsive-grid-3 {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+/* Hide/show for responsive */
+.hide-mobile {
+    display: none;
+}
+
+@media (min-width: 768px) {
+    .hide-mobile {
+        display: block;
+    }
+}
+
+.hide-tablet {
+    display: block;
+}
+
+@media (min-width: 768px) and (max-width: 1024px) {
+    .hide-tablet {
+        display: none;
+    }
+}
+
+.hide-desktop {
+    display: block;
+}
+
+@media (min-width: 1024px) {
+    .hide-desktop {
+        display: none;
+    }
+}
+
+/* Responsive padding */
+.px-responsive {
+    padding-left: 12px;
+    padding-right: 12px;
+}
+
+@media (min-width: 640px) {
+    .px-responsive {
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+}
+
+@media (min-width: 1024px) {
+    .px-responsive {
+        padding-left: 28px;
+        padding-right: 28px;
+    }
+}
+
+/* Improved table responsiveness */
+@media (max-width: 768px) {
+    table {
+        font-size: 0.9rem;
+    }
+
+    table th,
+    table td {
+        padding: 8px 6px !important;
+    }
+
+    .table-responsive {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+}
+
+/* Improved form responsiveness */
+.form-group {
+    margin-bottom: 16px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 500;
+    font-size: 0.95rem;
+}
+
+@media (max-width: 480px) {
+    .form-group label {
+        font-size: 0.9rem;
+    }
+}
+
+/* Improved input fields */
+input[type="text"],
+input[type="email"],
+input[type="number"],
+input[type="date"],
+input[type="time"],
+select,
+textarea {
+    width: 100%;
+    padding: 10px 12px;
+    font-size: 16px; /* Prevents zoom on iOS */
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    transition: border-color var(--transition);
+}
+
+@media (max-width: 480px) {
+    input[type="text"],
+    input[type="email"],
+    input[type="number"],
+    input[type="date"],
+    input[type="time"],
+    select,
+    textarea {
+        padding: 12px 14px;
+    }
+}
+
+/* Improved button responsiveness */
+.btn {
+    min-height: 44px;
+    font-size: clamp(0.875rem, 2vw, 1rem);
+    padding: 12px 20px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+@media (max-width: 480px) {
+    .btn {
+        min-height: 48px;
+        padding: 12px 16px;
+    }
+
+    .btn-sm {
+        min-height: 36px;
+        padding: 8px 12px;
+    }
+}
+
+/* Improved card responsiveness */
+.card {
+    overflow: hidden;
+}
+
+@media (max-width: 480px) {
+    .card {
+        border-radius: var(--radius-sm);
+        margin-bottom: 12px;
+    }
+}
+
+/* Responsive banner/hero */
+.invoice-number-banner,
+.quotation-header {
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+@media (max-width: 640px) {
+    .invoice-number-banner input,
+    .quotation-header input {
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .invoice-number-banner > div,
+    .quotation-header > div {
+        flex-basis: 100%;
+    }
+}
+
+/* Touch-friendly spacing */
+@media (hover: none) and (pointer: coarse) {
+    /* Mobile devices */
+    button,
+    a.btn,
+    input[type="button"],
+    input[type="submit"] {
+        min-height: 48px;
+        min-width: 48px;
+    }
 }
 
 /* ═══════════════════════════════
@@ -1040,17 +1419,28 @@ td .action-group {
     /* Buttons on mobile */
     .form-actions {
         flex-direction: column;
+        gap: 10px;
     }
 
     .form-actions .btn {
         width: 100%;
+        min-height: 44px;
     }
 
     /* Keep inline buttons compact */
     .btn-sm {
-        padding: 6px 12px;
-        font-size: 0.78rem;
-        min-height: 32px;
+        padding: 8px 14px;
+        font-size: 0.85rem;
+        min-height: 40px;
+    }
+
+    /* Better form group spacing */
+    .form-group {
+        margin-bottom: 14px;
+    }
+
+    .form-group:last-child {
+        margin-bottom: 0;
     }
 
     .actions-bar {

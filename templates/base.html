@@ -6,8 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="description" content="QuoteGen - Professional quotation and billing automation system for GST invoicing.">
-    <title>QuoteGen - Quotation System</title>
+    <meta name="description" content="BillGen - Professional quotation and invoice automation system for GST billing.">
+    <title>BillGen - Invoice & GST System</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -22,7 +22,7 @@
         </button>
         <div class="logo">
             <i class="fa-solid fa-file-invoice-dollar"></i>
-            <span>QuoteGen</span>
+            <span>BillGen</span>
         </div>
     </div>
 
@@ -33,18 +33,38 @@
         <aside class="sidebar" id="sidebar">
             <div class="logo">
                 <i class="fa-solid fa-file-invoice-dollar"></i>
-                <h2>QuoteGen</h2>
+                <h2>BillGen</h2>
             </div>
             <nav>
                 <a href="{{ url_for('main.dashboard') }}" class="nav-item">
                     <i class="fa-solid fa-gauge"></i> Dashboard
                 </a>
+
+                <div class="nav-section-label">QUOTATIONS</div>
                 <a href="{{ url_for('main.create_quotation') }}" class="nav-item">
                     <i class="fa-solid fa-plus-circle"></i> New Quotation
                 </a>
                 <a href="{{ url_for('main.upload_file') }}" class="nav-item">
                     <i class="fa-solid fa-cloud-arrow-up"></i> Upload Document
                 </a>
+
+                <div class="nav-section-label">INVOICES</div>
+                <a href="{{ url_for('main.invoices') }}" class="nav-item">
+                    <i class="fa-solid fa-file-invoice"></i> All Invoices
+                </a>
+                <a href="{{ url_for('main.create_invoice') }}" class="nav-item">
+                    <i class="fa-solid fa-receipt"></i> New Invoice
+                </a>
+                <a href="{{ url_for('main.upload_invoice_excel') }}" class="nav-item">
+                    <i class="fa-solid fa-file-excel"></i> Upload from Excel
+                </a>
+
+                <div class="nav-section-label">REPORTS</div>
+                <a href="{{ url_for('main.gst_report') }}" class="nav-item">
+                    <i class="fa-solid fa-chart-bar"></i> GST Report
+                </a>
+
+                <div class="nav-section-label">SETTINGS</div>
                 <a href="{{ url_for('main.company_settings') }}" class="nav-item">
                     <i class="fa-solid fa-building"></i> Company Settings
                 </a>
@@ -73,6 +93,8 @@
                     <i class="fa-solid fa-circle-check"></i>
                     {% elif category == 'error' %}
                     <i class="fa-solid fa-circle-exclamation"></i>
+                    {% elif category == 'warning' %}
+                    <i class="fa-solid fa-triangle-exclamation"></i>
                     {% endif %}
                     {{ message }}
                 </div>
